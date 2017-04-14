@@ -2,6 +2,7 @@
 import os
 import sys
 import ctypes
+import objc_util
 import base64
 import pickle
 
@@ -15,11 +16,26 @@ OLD_PY2_FRAMEWORK = "PythonistaKit"
 NEW_PY2_FRAMEWORK = "Py2Kit"
 
 CODE_TEMPLATE = """#Py3 preperation template
+def log(msg):  # before import so that we can notify about the imports
+	'''debug help function'''
+	lp = {lp}
+	if lp is None:
+		return
+	with open(lp, "a") as l:
+		l.write(msg)
+	return
+
+log("=====================\\n")
+log("title: {t}\\n")
+log("importing modules...\\n")
+
 import os
 import sys
 import pickle
 import base64
 import traceback
+
+log("Modules imported, defining vars...\\n")
 
 CWD = "{cwd}"
 CODE = base64.b64decode("{b64c}")  # use b64 to prevent syntax errors
@@ -27,28 +43,40 @@ STDIN_FD = {stdin}
 STDOUT_FD = {stdout}
 STDERR_FD = {stderr}
 
+log("Vars defined, opening I/O...\\n")
+
 # prepare I/O
 sys.stdin = open(STDIN_FD, "r")
 sys.stdout = open(STDOUT_FD, "w")
 sys.stderr = open(STDERR_FD, "w")
 
+log("I/O opened, preparing OS environment...\\n")
+
 # prepare env, cwd ...
 os.chdir(CWD)
+
+log("OS environment prepared, preparing scope...\\n")
 
 # prepare scope
 c_globals = pickle.loads(base64.b64decode("{globals}"))
 c_locals = pickle.loads(base64.b64decode("{locals}"))
 
+log("Everything setup. Executing code...\\n")
+
 # execute
 try:
 	exec(CODE, c_globals, c_locals)
+	log("Exec success.\\n")
 except Exception as e:
 	# only print traceback, so we can close sys.std*
+	log("Showing error...\\n")
 	traceback.print_exc(file=sys.stderr)
 finally:
+	log("Closing I/O...\\n")
 	sys.stdin.close()
 	sys.stdout.close()
 	sys.stderr.close()
+log("Done.\\n")
 """
 
 def get_dll(version):
@@ -65,13 +93,14 @@ def get_dll(version):
 		raise ValueError("Unknown Python version: '{v}'!".format(v=version))
 
 
+@objc_util.on_main_thread
 def exec_string(dll, s):
 	"""execute a string with the dll"""
 	state = dll.PyGILState_Ensure()
 	dll.PyRun_SimpleString(s)
 	dll.PyGILState_Release(state)
 
-def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}):
+def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, lp=None, lt="?"):
 	"""executes string s using dll and return stdin, stdout, stderr"""
 	if cwd is None:
 		cwd = os.getcwd()
@@ -89,6 +118,8 @@ def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}):
 		stderr=excw,
 		globals=base64.b64encode(pickle.dumps(globals)),
 		locals=base64.b64encode(pickle.dumps(locals)),
+		lp=repr(lp),  # eval(repr(obj)) == obj
+		t=lt,
 		)
 	exec_string(dll, filled_t)
 	return stdin, stdout, stderr
@@ -96,10 +127,16 @@ def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}):
 
 def _test():
 	# test code. status message are UPPERCASE to see test starts/end easier
+	lp = os.path.abspath("./librunnerlog.log")
 	dll3 = get_dll(3)
 	# 1. syntax error print
 	sys.stdout.write("STARTING SYNTAX ERROR TEST PY3...\n")
-	i, o, e = exec_string_with_io(dll3, "print 'this should be an error in py3'")
+	i, o, e = exec_string_with_io(
+		dll3,
+		"print 'this should be an error in py3'",
+		lp=lp,
+		lt="PY3 Syntax error test"
+		)
 	sys.stdout.write("READING STDOUT (expected empty)...\n")
 	sys.stdout.write(o.read(2048)+"\n")
 	sys.stdout.write("READING STDERR (expected traceback)...\n")
@@ -109,11 +146,14 @@ def _test():
 	o.close()
 	e.close()
 	sys.stdout.write("\nSYNTAX ERROR TEST FINISHED\n")
+	raise Exception("Breaking here")  # uncomment this to see that the above test is working
 	# 2. echo test
 	sys.stdout.write("STARTING ECHO TEST...\n")
 	i, o, e = exec_string_with_io(
 		dll3,
 		"print(input('Hello, what is your name?').uppercase())",
+		lp=lp,
+		lt="PY3 echo test",
 		)
 	sys.stdout.write("READING STDOUT (expected prompt)...\n")
 	sys.stdout.write(o.read(2048)+"\n")
@@ -125,7 +165,7 @@ def _test():
 	i.close()
 	o.close()
 	e.close()
-	sys.stdout.write("\nSYNTAX ERROR TEST FINISHED\n")
+	sys.stdout.write("\nECHO TEST FINISHED\n")
 
 
 if __name__ == "__main__":
