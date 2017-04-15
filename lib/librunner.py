@@ -42,6 +42,7 @@ CODE = base64.b64decode("{b64c}")  # use b64 to prevent syntax errors
 STDIN_FD = {stdin}
 STDOUT_FD = {stdout}
 STDERR_FD = {stderr}
+ARGV = {argv}
 
 log("Vars defined, opening I/O...\\n")
 
@@ -60,6 +61,9 @@ log("OS environment prepared, preparing scope...\\n")
 # prepare scope
 c_globals = pickle.loads(base64.b64decode("{globals}"))
 c_locals = pickle.loads(base64.b64decode("{locals}"))
+
+log("Scope prepared, setting argv...\\n")
+sys.argv = ARGV
 
 log("Everything setup. Executing code...\\n")
 
@@ -100,7 +104,7 @@ def exec_string(dll, s):
 	dll.PyRun_SimpleString(s)
 	dll.PyGILState_Release(state)
 
-def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, lp=None, lt="?"):
+def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, argv=None, lp=None, lt="?"):
 	"""executes string s using dll and return stdin, stdout, stderr"""
 	if cwd is None:
 		cwd = os.getcwd()
@@ -120,6 +124,7 @@ def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, lp=None, lt="?"
 		locals=base64.b64encode(pickle.dumps(locals)),
 		lp=repr(lp),  # eval(repr(obj)) == obj
 		t=lt,
+		argv=repr(argv if argv is not None else sys.argv),
 		)
 	exec_string(dll, filled_t)
 	return stdin, stdout, stderr
@@ -127,6 +132,7 @@ def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, lp=None, lt="?"
 
 def _test():
 	# test code. status message are UPPERCASE to see test starts/end easier
+	import time
 	lp = os.path.abspath("./librunnerlog.log")
 	dll3 = get_dll(3)
 	# 1. syntax error print
@@ -139,28 +145,36 @@ def _test():
 		)
 	sys.stdout.write("READING STDOUT (expected empty)...\n")
 	sys.stdout.write(o.read(2048)+"\n")
+	time.sleep(0.5)
 	sys.stdout.write("READING STDERR (expected traceback)...\n")
 	sys.stdout.write(e.read(4096)+"\n")
+	time.sleep(0.5)
 	sys.stdout.write("CLOSING I/O...\n")
 	i.close()
 	o.close()
 	e.close()
 	sys.stdout.write("\nSYNTAX ERROR TEST FINISHED\n")
-	raise Exception("Breaking here")  # uncomment this to see that the above test is working
+	time.sleep(1)
+	# raise Exception("Breaking here")  # uncomment this to see that the above test is working
 	# 2. echo test
 	sys.stdout.write("STARTING ECHO TEST...\n")
 	i, o, e = exec_string_with_io(
 		dll3,
-		"print(input('Hello, what is your name?').uppercase())",
+		"print(input('Hello, what is your name? ').uppercase())",
 		lp=lp,
 		lt="PY3 echo test",
 		)
 	sys.stdout.write("READING STDOUT (expected prompt)...\n")
-	sys.stdout.write(o.read(2048)+"\n")
+	sys.stdout.write("123", o.read(2048)+"\n")
+	time.sleep(0.5)
 	sys.stdout.write("READING STDERR (expected empty)...\n")
 	sys.stdout.write(e.read(4096)+"\n")
+	time.sleep(0.5)
 	sys.stdout.write("PLEASE ENTER A STRING TO SEND TO STDIN:\n")
-	i.write(sys.stdin.readline())
+	il = sys.stdin.readline()
+	sys.stdout.write("SENDING DATA TO STDIN...\n")
+	i.write(il)
+	time.sleep(0.5)
 	sys.stdout.write("CLOSING I/O...\n")
 	i.close()
 	o.close()
