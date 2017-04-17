@@ -5,6 +5,12 @@ import ctypes
 import objc_util
 import base64
 import pickle
+import threading
+import select
+import time
+
+from stash.system.shio import ShIO
+from stash.system.shiowrapper import ShStdinWrapper
 
 
 # TODO:
@@ -34,6 +40,7 @@ import sys
 import pickle
 import base64
 import traceback
+import threading
 
 log("Modules imported, defining vars...\\n")
 
@@ -65,22 +72,28 @@ c_locals = pickle.loads(base64.b64decode("{locals}"))
 log("Scope prepared, setting argv...\\n")
 sys.argv = ARGV
 
-log("Everything setup. Executing code...\\n")
+log("Everything setup. Starting thread...\\n")
 
 # execute
-try:
-	exec(CODE, c_globals, c_locals)
-	log("Exec success.\\n")
-except Exception as e:
-	# only print traceback, so we can close sys.std*
-	log("Showing error...\\n")
-	traceback.print_exc(file=sys.stderr)
-finally:
-	log("Closing I/O...\\n")
-	sys.stdin.close()
-	sys.stdout.close()
-	sys.stderr.close()
-log("Done.\\n")
+def run(code, c_globals, c_locals):
+	'''executes the script'''
+	log("Executing...\\n")
+	try:
+		exec(code, c_globals, c_locals)
+		log("Exec success.\\n")
+	except Exception as e:
+		# only print traceback, so we can close sys.std*
+		log("Showing error...\\n")
+		traceback.print_exc(file=sys.stderr)
+	finally:
+		log("Closing I/O...\\n")
+		sys.stdin.close()
+		sys.stdout.close()
+		sys.stderr.close()
+	log("Done.\\n")
+thr = threading.Thread(target=run, args=(CODE, c_globals, c_locals))
+thr.daemon = False
+thr.start()
 """
 
 def get_dll(version):
@@ -97,14 +110,14 @@ def get_dll(version):
 		raise ValueError("Unknown Python version: '{v}'!".format(v=version))
 
 
-@objc_util.on_main_thread
+# @objc_util.on_main_thread
 def exec_string(dll, s):
 	"""execute a string with the dll"""
 	state = dll.PyGILState_Ensure()
 	dll.PyRun_SimpleString(s)
 	dll.PyGILState_Release(state)
 
-def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, argv=None, lp=None, lt="?"):
+def exec_string_with_new_io(dll, s, cwd=None, globals={}, locals={}, argv=None, lp=None, lt="?"):
 	"""executes string s using dll and return stdin, stdout, stderr"""
 	if cwd is None:
 		cwd = os.getcwd()
@@ -126,18 +139,105 @@ def exec_string_with_io(dll, s, cwd=None, globals={}, locals={}, argv=None, lp=N
 		t=lt,
 		argv=repr(argv if argv is not None else sys.argv),
 		)
-	exec_string(dll, filled_t)
+	thr = threading.Thread(target=exec_string, args=(dll, filled_t), name="Py3/Py2 Crossrunner")
+	thr.daemon = False
+	thr.start()
 	return stdin, stdout, stderr
+
+
+def exec_string_with_io(dll, s, ins, outs, errs, *args, **kwargs):
+	"""Like exec_string_with_new_io, but uses specified std*. Blocking."""
+	i, o, e = exec_string_with_new_io(dll, s, *args, **kwargs)
+	try:
+		relay_data(((e, errs), (o, outs), (ins, i)), loop=0.2)
+	finally:
+		close_files(i, o, e)
+
+
+def close_files(*args):
+	"""closes all files"""
+	for arg in args:
+		try:
+			if isinstance(arg, (int, long)):
+				os.close(arg)
+			else:
+				arg.close()
+		except:
+			pass
+
+def can_read(f):
+	"""check if f contains data which can be read"""
+	if isinstance(f, (int, long)) or hasattr(f, "fileno"):
+		return (f in select.select([f], [], [], 0)[0])
+	elif isinstance(f, ShIO):
+		return f.can_read()
+	elif isinstance(f, ShStdinWrapper):
+		thr = threading.current_thread()
+		sin = thr.state.sys_stdin
+		return can_read(sin)
+	else:
+		raise ValueError("Cant check {f}".format(f=repr(f)))
+
+
+def relay_data(files, loop, buffersize=4096):
+	"""Transfers data from one file to another file.
+'files' should be a sequence of (readfile, writefile),
+where readfile is the file to be read from and writerile the file which
+will be written to.
+'loop' defines the loop behavior of the function.
+If loop is False, only read and write okce for each pair of files.
+If loop is an integer of float, sleep this time between each loop.
+"""
+	files = list(files)
+	while True:
+		if len(files) == 0:
+			break
+		for rf, wf in files:
+			if hasattr(wf, "fileno"):
+				fd = wf.fileno()
+				try:
+					os.fstat(fd)
+				except OSError:
+					files.remove((rf, wf))
+					break
+			else:
+				fd = None
+			if can_read(rf):
+				if hasattr(rf, "read_no_block"):
+					may_remove = False
+					data = rf.read_no_block(buffersize)
+				else:
+					may_remove = True
+					data = rf.read(buffersize)
+				if (data == "") and may_remove:
+					files.remove((rf, wf))
+				else:
+					if fd is not None:
+						try:
+							n = os.write(fd, data)
+						except OSError:
+							files.remove((rf, wf))
+							break
+						else:
+							if (n == 0) and (len(data) != 0):
+								# closed pipe
+								files.remove((rf, wf))
+								break
+					else:
+						wf.write(data)
+		if loop in (False, None):
+			break
+		else:
+			time.sleep(loop)
 
 
 def _test():
 	# test code. status message are UPPERCASE to see test starts/end easier
-	import time
 	lp = os.path.abspath("./librunnerlog.log")
 	dll3 = get_dll(3)
 	# 1. syntax error print
 	sys.stdout.write("STARTING SYNTAX ERROR TEST PY3...\n")
-	i, o, e = exec_string_with_io(
+	i, o, e = exec_string_with_new_io(
 		dll3,
 		"print 'this should be an error in py3'",
 		lp=lp,
@@ -150,22 +250,25 @@ def _test():
 	sys.stdout.write(e.read(4096)+"\n")
 	time.sleep(0.5)
 	sys.stdout.write("CLOSING I/O...\n")
-	i.close()
-	o.close()
-	e.close()
+	close_files(i, o, e)
 	sys.stdout.write("\nSYNTAX ERROR TEST FINISHED\n")
 	time.sleep(1)
 	# raise Exception("Breaking here")  # uncomment this to see that the above test is working
 	# 2. echo test
 	sys.stdout.write("STARTING ECHO TEST...\n")
-	i, o, e = exec_string_with_io(
+	i, o, e = exec_string_with_new_io(
 		dll3,
-		"print(input('Hello, what is your name? ').uppercase())",
+		"""print("echo test start")
+i = input('Hello, what is your name? ')
+u = i.uppercase()
+print(u)
+print("echo test end")
+""",
 		lp=lp,
 		lt="PY3 echo test",
 		)
 	sys.stdout.write("READING STDOUT (expected prompt)...\n")
-	sys.stdout.write("123", o.read(2048)+"\n")
+	#sys.stdout.write(o.read(2048)+"\n")
 	time.sleep(0.5)
 	sys.stdout.write("READING STDERR (expected empty)...\n")
 	sys.stdout.write(e.read(4096)+"\n")
@@ -175,10 +278,11 @@ def _test():
 	sys.stdout.write("SENDING DATA TO STDIN...\n")
 	i.write(il)
 	time.sleep(0.5)
+	sys.stdout.write("READING STDOUT (expected uppercase input)...\n")
+	sys.stdout.write(o.read(4096))
+	time.sleep(0.5)
 	sys.stdout.write("CLOSING I/O...\n")
-	i.close()
-	o.close()
-	e.close()
+	close_files(i, o, e)
 	sys.stdout.write("\nECHO TEST FINISHED\n")
 
 

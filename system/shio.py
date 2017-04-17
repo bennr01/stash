@@ -62,7 +62,7 @@ class ShIO(object):
     def read(self, size=-1):
         size = size if size != 0 else 1
 
-        if size == -1:
+        if size < 0:
             return ''.join(self._buffer.pop() for _ in len(self._buffer))
 
         else:
@@ -75,6 +75,15 @@ class ShIO(object):
                     time.sleep(self.holdback)
 
             return ''.join(ret)
+            
+    def read_no_block(self, size=-1):
+        """reads at most size bytes from the buffer and returns them."""
+        if size < 0:
+            return self.read(size)
+        elif size > len(self._buffer):
+            return self.read(len(self._buffer))
+        else:
+            return self.read(size)
 
     def readline(self, size=-1):
         ret = []
@@ -155,6 +164,10 @@ class ShIO(object):
             except IndexError:
                 self._buffer.extend(ret)
                 break
+                
+    def can_read(self):
+        """Returns True if data can be read from this ShIO object"""
+        return (len(self._buffer) > 0)
 
     def write(self, s, no_wait=False):
         if len(s) == 0:  # skip empty string
