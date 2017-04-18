@@ -78,6 +78,8 @@ class ShIO(object):
             
     def read_no_block(self, size=-1):
         """reads at most size bytes from the buffer and returns them."""
+        if len(self._buffer) == 0:
+            return ""
         if size < 0:
             return self.read(size)
         elif size > len(self._buffer):
