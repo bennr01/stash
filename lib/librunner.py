@@ -170,7 +170,7 @@ def can_read(f):
 	if isinstance(f, (int, long)) or hasattr(f, "fileno"):
 		return (f in select.select([f], [], [], 0)[0])
 	elif isinstance(f, ShIO):
-		return f.can_read()
+		return True  # f.can_read()
 	elif isinstance(f, ShStdinWrapper):
 		thr = threading.current_thread()
 		sin = thr.state.sys_stdin
