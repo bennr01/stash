@@ -2,7 +2,6 @@
 import os
 import sys
 import ctypes
-import objc_util
 import base64
 import pickle
 import threading
@@ -41,6 +40,7 @@ import pickle
 import base64
 import traceback
 import threading
+import io
 
 log("Modules imported, defining vars...\\n")
 
@@ -50,6 +50,7 @@ STDIN_FD = {stdin}
 STDOUT_FD = {stdout}
 STDERR_FD = {stderr}
 ARGV = {argv}
+NAME = {name}
 
 log("Vars defined, opening I/O...\\n")
 
@@ -63,14 +64,19 @@ log("I/O opened, preparing OS environment...\\n")
 # prepare env, cwd ...
 os.chdir(CWD)
 
+
 log("OS environment prepared, preparing scope...\\n")
 
 # prepare scope
 c_globals = pickle.loads(base64.b64decode("{globals}"))
 c_locals = pickle.loads(base64.b64decode("{locals}"))
+if c_locals is None:
+	c_locals = c_globals
 
-log("Scope prepared, setting argv...\\n")
+log("Scope prepared, setting argv and name...\\n")
 sys.argv = ARGV
+__name__ = NAME
+c_globals["__name__"] = __name__
 
 log("Everything setup. Starting thread...\\n")
 
@@ -83,13 +89,20 @@ def run(code, c_globals, c_locals):
 		log("Exec success.\\n")
 	except Exception as e:
 		# only print traceback, so we can close sys.std*
-		log("Showing error...\\n")
-		traceback.print_exc(file=sys.stderr)
+		log("Catching error...\\n")
+		ef = io.StringIO()
+		traceback.print_exc(file=ef)
+		em = ef.getvalue()
+		log(em)
+		log("Showing Error...\\n")
+		sys.stderr.write(em)
 	finally:
 		log("Closing I/O...\\n")
-		sys.stdin.close()
-		sys.stdout.close()
-		sys.stderr.close()
+		for p in (sys.stdin, sys.stdout, sys.stderr):
+			try:
+				p.close()
+			except:
+				log("Can not close {{p}}.\\n".format(p=p))
 	log("Done.\\n")
 thr = threading.Thread(target=run, args=(CODE, c_globals, c_locals))
 thr.daemon = False
@@ -110,14 +123,14 @@ def get_dll(version):
 		raise ValueError("Unknown Python version: '{v}'!".format(v=version))
 
 
-# @objc_util.on_main_thread
 def exec_string(dll, s):
 	"""execute a string with the dll"""
 	state = dll.PyGILState_Ensure()
 	dll.PyRun_SimpleString(s)
 	dll.PyGILState_Release(state)
 
-def exec_string_with_new_io(dll, s, cwd=None, globals={}, locals={}, argv=None, lp=None, lt="?"):
+
+def exec_string_with_new_io(dll, s, cwd=None, globals={}, locals=None, argv=None, name="__main__", lp=None, lt="?"):
 	"""executes string s using dll and return stdin, stdout, stderr"""
 	if cwd is None:
 		cwd = os.getcwd()
@@ -138,6 +151,7 @@ def exec_string_with_new_io(dll, s, cwd=None, globals={}, locals={}, argv=None, 
 		lp=repr(lp),  # eval(repr(obj)) == obj
 		t=lt,
 		argv=repr(argv if argv is not None else sys.argv),
+		name=repr(name),
 		)
 	thr = threading.Thread(target=exec_string, args=(dll, filled_t), name="Py3/Py2 Crossrunner")
 	thr.daemon = False
@@ -212,6 +226,8 @@ If loop is an integer of float, sleep this time between each loop.
 				if (data == "") and may_remove:
 					files.remove((rf, wf))
 				else:
+					print "got data on: ", rf
+					print "data is: ", data
 					if fd is not None:
 						try:
 							n = os.write(fd, data)

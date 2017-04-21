@@ -26,7 +26,7 @@ locals = {
         '__doc__': None,
         '__package__': None,
         '__debug__': True,
-        '__builtins__': builtins,  # yes, __builtins__
+        '__builtins__': builtins,
         # '_stash': _stash,
     }
 code.interact(local=locals)
@@ -69,10 +69,11 @@ default_args = {
     "errs": sys.stderr,
     "cwd": os.getcwd(),
     "globals": {},
-    "locals": {},
+#    "locals": {},
     "argv": ns.args_to_pass,
-    "lp": None, #"./librunnerlog.log",
+    "lp": "./librunnerlog.log",
     "lt": "python3",
+    "name": "__main__",
 }
 
 if ns.module:
