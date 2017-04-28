@@ -14,6 +14,7 @@ from StringIO import StringIO
 import imp as pyimp  # rename to avoid name conflict with objc_util
 import logging
 import logging.handlers
+import types
 
 
 # noinspection PyPep8Naming
@@ -156,6 +157,18 @@ class StaSh(object):
             input_, persistent_level=persistent_level, *args, **kwargs)
         worker.join()
         return worker
+    
+    def __getitem__(self, key):
+        """self[key] = self.__dict__[key]"""
+        return self.__dict__[key]
+    
+    def __setitem__(self, key, value):
+        """self[key] = value  => self.__dict__[key] = value"""
+        self.__dict__[key] = value
+    
+    def __delitem__(self, key):
+        """del self[key]  =>  del self.__dict__[key]"""
+        del self.__dict__[key]
 
     @staticmethod
     def _load_config(no_cfgfile=False):
@@ -218,11 +231,26 @@ class StaSh(object):
                         and os.path.isfile(os.path.join(lib_path, f)):
                     name, _ = os.path.splitext(f)
                     try:
-                        self.__dict__[name] = pyimp.load_source(name, os.path.join(lib_path, f))
+                        mod = pyimp.load_source(name, os.path.join(lib_path, f))
+                        if hasattr(mod, "on_load"):
+                            mod.on_load(self)
+                        self.__dict__[name] = mod
                     except Exception as e:
                         self.write_message('%s: failed to load library file (%s)' % (f, repr(e)))
         finally:  # do not modify environ permanently
             os.environ.pop('STASH_ROOT')
+     
+    def iterlibs(self):
+        """iterates over all libs"""
+        for key in list(self.__dict__):  # do not iterate over dict
+            if not key.startswith("lib"):
+                continue
+            value = self.__dict__.get(key, None)
+            if value is None:
+                continue
+            if type(value) != types.ModuleType:
+                continue
+            yield value
 
     def write_message(self, s):
         self.io.write('stash: %s\n' % s)
@@ -232,6 +260,15 @@ class StaSh(object):
         self.terminal.begin_editing()
 
     def cleanup(self):
+        for lib in self.iterlibs():
+            if hasattr(lib, "on_cleanup"):
+                try:
+                    lib.on_cleanup(self)
+                except Exception as e:
+                    name = getattr(lib, "__name__", repr(lib))
+                    tpl = "{n}: failed to cleanup library file ({m})"
+                    msg = tpl.format(n=name, m=repr(m))
+                    self.write_message(msg)
         disable_io_wrapper()
 
     def get_workers(self):
