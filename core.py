@@ -5,7 +5,7 @@ StaSh - Pythonista Shell
 https://github.com/ywangd/stash
 """
 
-__version__ = '0.0.1'
+__version__ = '999.999.999'
 
 import imp as pyimp  # rename to avoid name conflict with objc_util
 import logging
