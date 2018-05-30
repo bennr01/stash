@@ -5,7 +5,7 @@ StaSh - Pythonista Shell
 https://github.com/ywangd/stash
 """
 
-__version__ = '0.7.0'
+__version__ = '0.0.1'
 
 import imp as pyimp  # rename to avoid name conflict with objc_util
 import logging
@@ -74,19 +74,19 @@ BUFFER_MAX=150
 AUTO_COMPLETION_MAX=50
 VK_SYMBOLS=~/.-*|>$'=!&_"\?`
 """.format(
-	font_size=(14 if ON_IPAD else 12),
-	)
+    font_size=(14 if ON_IPAD else 12),
+    )
 
 
 # create directories outside STASH_ROOT
 # we should do this each time StaSh because some commands may require
 # this directories
 for p in _EXTERNAL_DIRS:
-	if not os.path.exists(p):
-		try:
-			os.mkdir(p)
-		except:
-			pass
+    if not os.path.exists(p):
+        try:
+            os.mkdir(p)
+        except:
+            pass
 
 
 class StaSh(object):
@@ -94,7 +94,7 @@ class StaSh(object):
     Main application class. It initialize and wires the components and provide
     utility interfaces to running scripts.
     """
-    
+
     PY3 = six.PY3
 
     def __init__(self, debug=(), log_setting=None,
@@ -144,15 +144,15 @@ class StaSh(object):
             os.chdir(self.runtime.state.environ_get('HOME2'))
         self.runtime.load_rcfile(no_rcfile=no_rcfile)
         self.io.write(
-        	self.text_style(
-        		'StaSh v%s on python %s\n' % (
-        			self.__version__,
-        			platform.python_version(),
-        			), 
-        		{'color': 'blue', 'traits': ['bold']},
-        		always=True,
-        		),
-        	)
+            self.text_style(
+                'StaSh v%s on python %s\n' % (
+                    self.__version__,
+                    platform.python_version(),
+                    ),
+                {'color': 'blue', 'traits': ['bold']},
+                always=True,
+                ),
+            )
         # warn on py3
         if self.PY3:
             self.io.write(
@@ -177,7 +177,7 @@ class StaSh(object):
             # show tip of the day
             command = '$STASH_ROOT/bin/totd.py'
         if command:
-        	# do not run command if command is False (but not None)
+            # do not run command if command is False (but not None)
             self(command, add_to_history=False, persistent_level=0)
     def __call__(self, input_, persistent_level=2, *args, **kwargs):
         """ This function is to be called by external script for
@@ -284,10 +284,10 @@ class StaSh(object):
         """
         # No color for pipes, files and Pythonista console
         if not always and (
-        	isinstance(sys.stdout, (StringIO, IOBase))
-        	# or sys.stdout.write.im_self is _SYS_STDOUT
-        	or sys.stdout is _SYS_STDOUT
-        	):
+            isinstance(sys.stdout, (StringIO, IOBase))
+            # or sys.stdout.write.im_self is _SYS_STDOUT
+            or sys.stdout is _SYS_STDOUT
+            ):
             return s
 
         fmt_string = u'%s%%d%s%%s%s%%d%s' % (ctrl.CSI, esc.SGR, ctrl.CSI, esc.SGR)
