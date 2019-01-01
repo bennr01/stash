@@ -186,6 +186,10 @@ command_help={    'init':  'initialize a new Git repository'
           }
 
 
+class NotAGitRepository(Exception):
+    """Error raised when a path is not (in) a git repository."""
+    pass
+
     
 #Find a git repo dir
 def _find_repo(path):
@@ -207,7 +211,7 @@ def _find_repo(path):
 def _get_repo():
     repo_dir = _find_repo(os.getcwd())
     if not repo_dir:
-        raise Exception("Current directory isn't a git repository")
+        raise NotAGitRepository("Current directory isn't a git repository")
     return Gittle(repo_dir)
 
 def _confirm_dangerous():
@@ -277,7 +281,11 @@ def git_init(args):
 
 def git_status(args):
     if len(args) == 0:
-        repo = _get_repo()
+        try:
+            repo = _get_repo()
+        except NotAGitRepository:
+            print("fatal: not a git repository!")
+            sys.exit(1)
         try:
             status = porcelain.status(repo.repo.path)
         except KeyError:
