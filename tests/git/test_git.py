@@ -12,8 +12,8 @@ class GitTests(StashTestCase):
         self.cwd = os.path.join(tempfile.gettempdir(), "gittest")
         if not os.path.exists(self.cwd):
             os.makedirs(self.cwd)
-        self.empty_cwd()
         StashTestCase.setUp(self)
+        self.empty_cwd()
     
     def empty_cwd(self):
         """delete everything in self.cwd)."""
