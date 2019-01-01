@@ -46,6 +46,8 @@ except ImportError:
     import stash.system.dummyeditor as editor
     import stash.system.dummykeychain as keychain
 
+from stash.system.shcommon import IN_PYTHONISTA
+
 _stash = globals()['_stash']
 SAVE_PASSWORDS = True
 
@@ -94,8 +96,11 @@ if AUTODOWNLOAD_DEPENDENCIES:
         download_dulwich = True 
     try:
         if download_dulwich:
-            if not input('Need to download dulwich.  OK to download [y/n]?') == 'y':
-                raise ImportError()
+            if IN_PYTHONISTA:
+                # only ask if running in pythonista
+                # otherwise, the tests may hang due to an input() call
+                if not input('Need to download dulwich.  OK to download [y/n]?') == 'y':
+                    raise ImportError()
             _stash('wget {} -o $TMPDIR/dulwich.zip'.format(DULWICH_URL))
             _stash('unzip $TMPDIR/dulwich.zip -d $TMPDIR/dulwich')
             _stash('rm -r $STASH_ROOT/lib/dulwich.old')
