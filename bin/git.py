@@ -36,9 +36,15 @@ from six.moves import input
 from six.moves.urllib.parse import urlparse, urlunparse
 from six import iteritems
 
-import console
-import editor  # for reloading current file
-import keychain
+try:
+    import console
+    import editor  # for reloading current file
+    import keychain
+except ImportError:
+    # running outside of pythonista
+    import stash.system.dummyconsole as console
+    import stash.system.dummyeditor as editor
+    import stash.system.dummykeychain as keychain
 
 _stash = globals()['_stash']
 SAVE_PASSWORDS = True
@@ -726,7 +732,10 @@ def refresh_editor():
     #reload current file in editor
     # TODO: only reload if the file was recently updated...
     try:
-        sel=editor.get_selection()
+        sel = editor.get_selection()
+        if sel is None:
+            # no file open
+            return
         editor.open_file(editor.get_path())
         import time
         time.sleep(0.5) #let the file load

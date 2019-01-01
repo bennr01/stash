@@ -8,3 +8,5 @@ def show_activity():
 def hide_activity():
     pass
 
+def login_alert(title, message="dummy", login="", password="", ok_button_title="OK"):
+    return (login, password)
