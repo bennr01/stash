@@ -1,4 +1,5 @@
 """tests for the git command."""
+import os
 import tempfile
 
 from stash.tests.stashtest import StashTestCase
