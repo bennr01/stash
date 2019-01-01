@@ -9,7 +9,9 @@ class GitTests(StashTestCase):
     """Tests for the git command."""
     def setUp(self):
         """setup the tests"""
-        self.cwd = tempfile.gettempdir()
+        self.cwd = os.path.join(tempfile.gettempdir(), "gittest")
+        if not os.path.exists(self.cwd):
+            os.makedirs(self.cwd)
         StashTestCase.setUp(self)
     
     def test_git_status_fail_in_empty(self):

@@ -278,7 +278,14 @@ def git_init(args):
 def git_status(args):
     if len(args) == 0:
         repo = _get_repo()
-        status = porcelain.status(repo.repo.path)
+        try:
+            status = porcelain.status(repo.repo.path)
+        except KeyError:
+            # repo empty
+            # TODO: check if this error may habe other causes too
+            print("fatal: current branch has no commits.")
+            # TODO: should we set the exitcode to 1?
+            return
         print('STAGED')
         for k,v in iteritems(status.staged):
             if v:
