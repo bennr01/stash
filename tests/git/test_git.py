@@ -17,7 +17,7 @@ class GitTests(StashTestCase):
     
     def empty_cwd(self):
         """delete everything in self.cwd)."""
-        self.run_command("rm -r " + os.path.join(self.cwd, "*"), exitcode=0)
+        self.run_command("rm -r " + os.path.join(self.cwd, "*"))  # ignore exitcode in case it was already empty
     
     def test_git_status_fail_in_empty(self):
         """ensure 'git status' fails in an empty directory."""
