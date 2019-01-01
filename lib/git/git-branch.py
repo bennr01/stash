@@ -10,10 +10,10 @@ import argparse
 import os
 import sys
 
-from git.gitutils import (GitError, _get_repo, any_one, count_commits_between,
-                          find_revision_sha, get_remote_tracking_branch)
-from six import iteritems
 from six.moves import input
+
+from git.gitutils import (GitError, _get_repo, any_one, count_commits_between,
+                          find_revision_sha, get_remote_tracking_branch, get_active_branch)
 
 
 def branch(args):
@@ -53,7 +53,7 @@ def branch(args):
     parser.add_argument('startpoint',nargs='?')
 
     
-    parser.add_argument('--edit_description',action='store',nargs='?',metavar='branchname', const=repo.active_branch)
+    parser.add_argument('--edit_description', action='store', nargs='?', metavar='branchname', const=get_active_branch(repo))
     
     
     result = parser.parse_args(args)
@@ -63,7 +63,7 @@ def branch(args):
     delete_branchname=result.delete or result.D
     move_branchname = result.move or result.M
     no_track=result.no_track
-    add_branchname = (result.branchname, result.startpoint or repo.active_branch)
+    add_branchname = (result.branchname, result.startpoint or get_active_branch(repo))
     set_upstream= result.set_upstream
 
     force = result.force or result.D or result.M
@@ -107,20 +107,23 @@ def format_tracking_branch_desc(repo,branchname):
         return '+{}/-{} relative to {} ({})'.format(ahead,behind,remote,theirsha)
     except KeyError:
         return ''
+
+
 def edit_branch_description(branchname, description=None):
     description = description or input('enter description:')
-    config = _get_repo().repo.get_config()
+    config = _get_repo().get_config()
     if not branchname in _get_repo().branches:
         GitError('{} is not an existing branch'.format(branchname))
         config.set(('branch',branchname),'description',description)
         config.write_to_path()
-        
+
+
 def branch_list(result):
         # TODO: tracking branches
         N=result.abbrev
         repo = _get_repo()
         if not result.remotes:
-            for key,value in iteritems(repo.branches):
+            for key,value in repo.branches.iteritems():
                 dispval=value[0:N]  #todo, --abbrev=n
                 commitmsg=(repo[value].message if result.verbose else '').strip()
                 tracking=get_remote_tracking_branch(repo,key)
@@ -133,7 +136,7 @@ def branch_list(result):
                     trackmsg='[{} {} {}]'.format(diffmsg,tracking,trackingsha[0:N])
                 print (' '.join([('* ' if repo.active_branch == key else '') + key,  dispval, commitmsg]))
         if result.remotes or result.all:
-            for key, value in iteritems(repo.remote_branches):
+            for key, value in repo.remote_branches.iteritems():
                 dispval=value[0:N]  #todo, --abbrev=n
                 commitmsg=(repo[value].message if result.verbose else '').strip()
                 print (' '.join([('* ' if repo.active_branch == key else '') + key,  dispval, commitmsg]))

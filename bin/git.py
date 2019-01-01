@@ -30,11 +30,9 @@ import posix
 import subprocess
 import sys
 
-
 from six import StringIO
 from six.moves import input
-from six.moves.urllib.parse import urlparse, urlunparse
-from six import iteritems
+from six.moves.urllib.parse import urlparse
 
 import console
 import editor  # for reloading current file
@@ -52,32 +50,27 @@ if not hasattr(subprocess,'call'):
         return 0
     subprocess.Popen=Popen
     subprocess.call=call
-GITTLE_URL='https://github.com/jsbain/gittle/archive/master.zip'
-FUNKY_URL='https://github.com/FriendCode/funky/archive/master.zip'
-DULWICH_URL='https://github.com/jsbain/dulwich/archive/ForStaSH_0.12.2.zip'
-REQUIRED_DULWICH_VERSION = (0,12,2)
+
+REQUIRED_DULWICH_VERSION = (0, 19, 9)
 AUTODOWNLOAD_DEPENDENCIES = True
 
 if AUTODOWNLOAD_DEPENDENCIES:
-    libpath=os.path.join(os.environ['STASH_ROOT'] ,'lib')
-    if not libpath in sys.path:
-        sys.path.insert(1,libpath)
-    download_dulwich = False 
-    
     #DULWICH
     try:  
         import dulwich
+        from dulwich.repo import Repo
         from dulwich.client import default_user_agent_string
         from dulwich import porcelain
-        from dulwich.index import index_entry_from_stat
+        from dulwich.index import index_entry_from_stat, build_index_from_tree
         if not dulwich.__version__ ==  REQUIRED_DULWICH_VERSION:
             print('Dulwich version was {}.  Required is {}.  Attempting to reload'.format(dulwich.__version__,REQUIRED_DULWICH_VERSION))
             for m in [m for m in sys.modules if m.startswith('dulwich')]:
                 del sys.modules[m]
             import dulwich
+            from dulwich.repo import Repo
             from dulwich.client import default_user_agent_string
             from dulwich import porcelain
-            from dulwich.index import index_entry_from_stat
+            from dulwich.index import index_entry_from_stat, build_index_from_tree
             if not dulwich.__version__ ==  REQUIRED_DULWICH_VERSION:
                 print('Could not find correct version. Will download proper fork now')
                 download_dulwich = True
@@ -90,14 +83,7 @@ if AUTODOWNLOAD_DEPENDENCIES:
         if download_dulwich:
             if not input('Need to download dulwich.  OK to download [y/n]?') == 'y':
                 raise ImportError()
-            _stash('wget {} -o $TMPDIR/dulwich.zip'.format(DULWICH_URL))
-            _stash('unzip $TMPDIR/dulwich.zip -d $TMPDIR/dulwich')
-            _stash('rm -r $STASH_ROOT/lib/dulwich.old')
-            _stash('mv $STASH_ROOT/lib/dulwich $STASH_ROOT/lib/dulwich.old')
-            _stash('mv $TMPDIR/dulwich/dulwich $STASH_ROOT/lib/')
-            _stash('rm  $TMPDIR/dulwich.zip')
-            _stash('rm -r $TMPDIR/dulwich')
-            _stash('rm -r $STASH_ROOT/lib/dulwich.old')
+            _stash('pip install dulwich=={}'.format(".".join([str(e) for e in REQUIRED_DULWICH_VERSION])))
             try: 
                 # dulwich might have already been in site-packages for instance.  
                 # So, some acrobatic might be needed to unload the module
@@ -110,44 +96,21 @@ if AUTODOWNLOAD_DEPENDENCIES:
                 pass 
             #try the imports again
             import dulwich
+            from dulwich.repo import Repo
             from dulwich.client import default_user_agent_string
             from dulwich import porcelain
-            from dulwich.index import index_entry_from_stat
+            from dulwich.index import index_entry_from_stat, build_index_from_tree
     except Exception:
         print('''Still could not import dulwich.
             Perhaps your network connection was unavailable.
             You might also try deleting any existing dulwich versions in site-packages or elsewhere, then restarting pythonista.''')
 
-    #gittle, funky
-    # todo... check gittle version
-    try:
-        gittle_path=os.path.join(libpath,'gittle')
-        funky_path=os.path.join(libpath,'funky')
-        #i have no idea why this is getting cleared...
-        if libpath not in sys.path:
-           sys.path.insert(1,libpath)
-        import gittle
-        Gittle=gittle.Gittle
-    except ImportError:
-        _stash('wget {} -o $TMPDIR/gittle.zip'.format(GITTLE_URL))
-        _stash('unzip $TMPDIR/gittle.zip -d $TMPDIR/gittle')
-        _stash('mv $TMPDIR/gittle/gittle $STASH_ROOT/lib')
-        _stash('wget {} -o $TMPDIR/funky.zip'.format(FUNKY_URL))
-        _stash('unzip $TMPDIR/funky.zip -d $TMPDIR/funky')
-        _stash('mv $TMPDIR/funky/funky $STASH_ROOT/lib')
-        _stash('rm  $TMPDIR/gittle.zip')
-        _stash('rm  $TMPDIR/funky.zip')
-        _stash('rm -r $TMPDIR/gittle')
-        _stash('rm -r $TMPDIR/funky')
-        import gittle
-        Gittle=gittle.Gittle
-    ## end install modules
 else:
     import dulwich
+    from dulwich.repo import Repo
     from dulwich.client import default_user_agent_string
     from dulwich import porcelain
-    from dulwich.index import index_entry_from_stat
-    from gittle import Gittle
+    from dulwich.index import index_entry_from_stat, build_index_from_tree
 
 dulwich.client.get_ssh_vendor = dulwich.client.ParamikoSSHVendor
 #  end temporary
@@ -197,7 +160,7 @@ def _get_repo():
     repo_dir = _find_repo(os.getcwd())
     if not repo_dir:
         raise Exception("Current directory isn't a git repository")
-    return Gittle(repo_dir)
+    return Repo(repo_dir)
 
 def _confirm_dangerous():
         repo = _get_repo()
@@ -207,11 +170,11 @@ def _confirm_dangerous():
             if not force=='y':
                 raise Exception('User cancelled dangerous operation')
                 
-def unstage(commit='HEAD',paths=[]):
-    repo=_get_repo().repo
+def unstage(commit='HEAD', paths=[]):
+    repo = _get_repo()
     for somepath in paths:
         #print path
-        path=_get_repo().relpath(somepath)
+        path = os.path.relpath(somepqth, _get_repo().path)
         full_path = os.path.join(repo.path, path)
 
         index=repo.open_index()
@@ -245,30 +208,30 @@ def unstage(commit='HEAD',paths=[]):
         index[path]=index_entry
         index.write()
 
-def unstage_all( commit='HEAD'):
+def unstage_all(commit='HEAD'):
     # files to unstage consist of whatever was in new tree, plus whatever was in old index (added files to old branch)
-    repo=_get_repo().repo
+    repo = _get_repo()
     index=repo.open_index()
     tree_id=repo[commit]._tree
     for entry in repo.object_store.iter_tree_contents(tree_id):
         unstage(commit,[entry.path])
 
-    for entry in iteritems(index):
+    for entry in index.iteritems():
         unstage(commit,[entry[0]])
 
     
 def git_init(args):
     if len(args) == 1:
-        Gittle.init(args[0])
+        Repo.init(args[0])
     else:
         print(command_help['init'])
 
 def git_status(args):
     if len(args) == 0:
         repo = _get_repo()
-        status = porcelain.status(repo.repo.path)
+        status = porcelain.status(repo.path)
         print('STAGED')
-        for k,v in iteritems(status.staged):
+        for k,v in status.staged.iteritems():
             if v:
                 print(k,v)
         print('UNSTAGED LOCAL MODS')
@@ -279,13 +242,14 @@ def git_status(args):
 
 def git_remote(args):
     '''List remote repos'''
+    import git.gitutils as gitutils
     if len(args) == 0:
         repo = _get_repo()
-        for key, value in repo.remotes.items():
+        for key, value in gitutils.get_remotes(repo).items():
             print('{} {}'.format(key, value))
     elif len(args)==2:
         repo=_get_repo()
-        repo.add_remote(args[0],args[1])
+        porcelain.remote_add(repo.path, args[0], args[1])
     else:
         print(command_help['remote'])
 
@@ -299,9 +263,9 @@ def git_add(args):
        
         for file in args:
             
-            if os.path.exists(os.path.join(repo.repo.path, file)):
+            if os.path.exists(os.path.join(repo.path, file)):
                 print('Adding {0}'.format(file))
-                porcelain.add(repo.repo.path, [file])
+                porcelain.add(repo.path, [file])
             else:
                 print('{} does not exist. skipping'.format(file))
 
@@ -317,20 +281,20 @@ def git_rm(args):
         for file in args:
             print('Removing {0}'.format(file))
             #repo.rm(args)
-            porcelain.rm(repo.repo.path, args)
+            porcelain.rm(repo.path, args)
 
     else:
         print(command_help['rm'])
-def launch_subcmd(cmd,args):
-    cmdpath=os.path.join(os.environ['STASH_ROOT'],'lib','git',cmd)
 
+def launch_subcmd(cmd, args):
+    cmdpath=os.path.join(os.environ['STASH_ROOT'], 'lib', 'git', cmd)
     _stash(cmdpath + ' ' + ' '.join(args))
             
 def git_branch(args):
-    launch_subcmd('git-branch.py',args)
+    launch_subcmd('git-branch.py', args)
     
 def git_merge(args):
-    launch_subcmd('git-merge.py',args)
+    launch_subcmd('git-merge.py', args)
 
 def git_reset(args):
     import git.gitutils as gitutils
@@ -350,19 +314,19 @@ def git_reset(args):
     
     if ns.merge:
         try:
-            os.remove(os.path.join(repo.repo.controldir(),'MERGE_HEAD'))
-            os.remove(os.path.join(repo.repo.controldir(),'MERGE_MSG'))
+            os.remove(os.path.join(repo.controldir(),'MERGE_HEAD'))
+            os.remove(os.path.join(repo.controldir(),'MERGE_MSG'))
         except OSError:
             pass  #todo, just no such file
         
     #handle optionals
-    commit= ns.commit
+    commit = ns.commit
     # first arg was really a file
     paths=ns.paths or []
     if not commit in repo and os.path.exists(commit): #really specified a path
         paths=[commit]+paths
         commit = None
-    elif not commit in repo and not commit in repo.branches and not commit in repo.remote_branches and not os.path.exists(commit):
+    elif not commit in repo and not commit in porcelain.branch_list(repo.path) and not os.path.exists(commit): # and not commit in repo.remote_branches: # TODO port remote beanches
         raise Exception('{} is not a valid commit or file'.format(commit))
     if not commit:
         commit='HEAD'
@@ -370,19 +334,20 @@ def git_reset(args):
     if not paths:
         #reset HEAD, if commit in branches
         if commit == 'HEAD':
-            commit = repo.head
-        elif commit in repo.branches:
+            commit = repo.head()
+        elif commit in porcelain.branch_list(repo.path):
             print('updating HEAD to ', commit)
-            repo.repo.refs.set_symbolic_ref('HEAD',repo._format_ref_branch(commit))
+            # repo.refs.set_symbolic_ref('HEAD', repo._format_ref_branch(commit))
+            porcelain.update_head(repo.path, commit)
         else:
             print(commit, 'is not a valid branchname.  head was not updated')
     if ns.hard:
         _confirm_dangerous()
  
     if ns.hard or ns.mixed:
-    # first, unstage index
+        # first, unstage index
         if paths:
-            unstage(commit,paths)
+            unstage(commit, paths)
         else:
             print('resetting index. please wait')
             unstage_all(commit)
@@ -390,53 +355,44 @@ def git_reset(args):
  
     # next, rebuild files
     if ns.hard:
+        # TODO: the following may not work
         treeobj=repo[repo[commit].tree]
         
         for path in paths:
-            print('resetting '+path)
-            relpath=repo.relpath(path)
-            file_contents=repo[treeobj.lookup_path(repo.__getitem__,relpath)[1]].as_raw_string()
+            print('resetting ' + path)
+            relpath = repo.relpath(path)
+            file_contents = repo[treeobj.lookup_path(repo.__getitem__, relpath)[1]].as_raw_string()
             with open(str(path),'w') as f:
                 f.write(file_contents)
 
 def get_config_or_prompt(repo, section, name, prompt, save=None):
-    config = repo.repo.get_config_stack()
+    config = repo.get_config_stack()
     try:
         value = config.get(section, name)
     except KeyError:
-        value = input(prompt).encode()
+        value = input(prompt)
         if save == None:
             reply = input('Save this setting? [y/n]')
             save = reply == 'y'
         if save:
-            reply = input('Save globally (~/.gitconfig) for all repos? [y/n]')
-            saveglobal = reply == 'y'
-            if saveglobal:
-                globalcfg = config.default_backends()
-                if not globalcfg:
-                    open(os.expanduser('~/.gitconfig','w')).close() #create file
-                    globalcfg = config.default_backends()[0]
-                globalcfg.set(section,name,value)
-                globalcfg.write_to_path()
-            else:
-                config.set(section, name, value)
-                config.writable.write_to_path()
+            config.set(section, name, value)
+            config.write_to_path()
     return value
         
 def git_commit(args):
     ap=argparse.ArgumentParser('Commit current working tree.')
-    ap.add_argument('message',default=None,nargs='?')
-    ap.add_argument('name',default=None,nargs='?')
-    ap.add_argument('email',default=None,nargs='?')
-    ns=ap.parse_args(args)
+    ap.add_argument('message', default=None, nargs='?')
+    ap.add_argument('name', default=None, nargs='?')
+    ap.add_argument('email', default=None, nargs='?')
+    ns = ap.parse_args(args)
     
     repo = _get_repo()
-    merging = repo.repo.get_named_file('MERGE_HEAD')
-    merge_head=None
+    merging = repo.get_named_file('MERGE_HEAD')
+    merge_head = None
     if merging:
         print('merging in process:') 
         merge_head= merging.read() or ''
-        merge_msg= repo.repo.get_named_file('MERGE_MSG').read() or ''
+        merge_msg= repo.get_named_file('MERGE_MSG').read() or ''
         print(merge_msg)
         ns.message = ns.message or '' + merge_msg
     if not ns.message:
@@ -455,8 +411,8 @@ def git_commit(args):
                                   , merge_heads=[merge_head] if merge_head else None))
         if merging:
             try:
-                os.remove(os.path.join(repo.repo.controldir(),'MERGE_HEAD'))
-                os.remove(os.path.join(repo.repo.controldir(),'MERGE_MSG'))
+                os.remove(os.path.join(repo.controldir(),'MERGE_HEAD'))
+                os.remove(os.path.join(repo.controldir(),'MERGE_MSG'))
             except OSError:
                 pass  #todo, just no such file
     except:
@@ -467,34 +423,40 @@ def git_commit(args):
 def git_clone(args):
     if len(args) > 0:
            url = args[0]
-           repo = Gittle.clone(args[0], args[1] if len(args)>1 else os.path.split(args[0])[-1].rstrip('.git'), bare=False)
+           # repo = Gittle.clone(args[0], args[1] if len(args)>1 else os.path.split(args[0])[-1].rstrip('.git'), bare=False)
+           repo = porcelain.clone(args[0], args[1] if len(qrgs) > 1 else os.path.split(args[0])[-1].rstrip('.git'), bare=False)
 
            #Set the origin
-           config = repo.repo.get_config()
-           config.set(('remote','origin'),'url',url)
+           config = repo.get_config()
+           config.set(('remote', 'origin'), 'url', url)
            config.write_to_path()
           
     else:
         print(command_help['clone'])
 
+
 def git_pull(args):
+    import git.gitutils as gitutils
     if len(args) <= 1:
         repo = _get_repo()
         _confirm_dangerous()
-        url = args[0] if len(args)==1 else repo.remotes.get('origin','')
+        url = args[0] if len(args)==1 else gitutils.get_remotes(repo).get('origin', '')
         
-        if url in repo.remotes:
-            origin=url
-            url=repo.remotes.get(origin)
+        if url in gitutils.get_remotes(repo):
+            origin = url
+            url = gitutils.get_remotes(repo).get(origin)
         
         if url:
-            repo.pull(origin_uri=url)
+            # repo.pull(origin_uri=url)
+            porcelain.pull(repo.path, remote_location=url)
         else:
             print('No pull URL.')
     else:
         print(command_help['git pull'])
 
-def git_fetch(args): 
+
+def git_fetch(args):
+    import git.gitutils as gitutils
     parser = argparse.ArgumentParser(prog='git fetch'
                                      , usage='git fetch [http(s)://<remote repo> or remotename] [-u username[:password]]'
                                      , description="Push to a remote repository")
@@ -504,50 +466,52 @@ def git_fetch(args):
     
     repo = _get_repo()
     
-    origin='origin'
+    origin = 'origin'
     if not result.url:
-        result.url = repo.remotes.get('origin','')
-    if result.url in repo.remotes:
-        origin=result.url
-        result.url=repo.remotes.get(origin)
-    if not urlparse(result.url).scheme:
+        result.url = gitutils.get_remotes(repo).get('origin','')
+    if result.url in gitutils.get_remotes(repo):
+        origin = result.url
+        result.url = gitutils.get_remotes(repo).get(origin)
+    if not urlparse.urlparse(result.url).scheme:
         raise Exception('url must match a remote name, or must start with http:// or https://')
     print('Starting fetch, this could take a while')
-    remote_refs=porcelain.fetch(repo.repo.path,result.url)
+    remote_refs = porcelain.fetch(repo.path, result.url)
     print('Fetch successful.  Importing refs')
-    remote_tags = gittle.utils.git.subrefs(remote_refs, 'refs/tags')
-    remote_heads = gittle.utils.git.subrefs(remote_refs, 'refs/heads')
+    remote_tags = gitutils.subrefs(remote_refs, 'refs/tags')
+    remote_heads = gitutils.subrefs(remote_refs, 'refs/heads')
         
     # Filter refs
-    clean_remote_tags = gittle.utils.git.clean_refs(remote_tags)
-    clean_remote_heads = gittle.utils.git.clean_refs(remote_heads)
+    clean_remote_tags = gitutils.clean_refs(remote_tags)
+    clean_remote_heads = gitutils.clean_refs(remote_heads)
 
     # Base of new refs
     heads_base = 'refs/remotes/' + origin
 
     # Import branches
-    repo.import_refs(
+    repo.refs.import_refs(
         heads_base,
         clean_remote_heads
     )
-    for k,v in clean_remote_heads.items():
-        print('imported {}/{} {}'.format(heads_base,k,v)) 
+    for k, v in clean_remote_heads.items():
+        print('imported {}/{} {}'.format(heads_base, k, v)) 
     # Import tags
-    repo.import_refs(
+    repo.refs.import_refs(
         'refs/tags',
         clean_remote_tags
     )
-    for k,v in clean_remote_tags.items():
+    for k, v in clean_remote_tags.items():
         print('imported {}/{} {}'.format('refs/tags',k,v)) 
     print('Checking for deleted remote refs')
     #delete unused remote refs
-    for k in gittle.utils.git.subrefs(repo.refs,heads_base):
+    for k in gitutils.subrefs(repo.refs, heads_base):
         if k not in clean_remote_heads:
-            print('Deleting {}'.format('/'.join([heads_base,k])))
-            del repo.refs['/'.join([heads_base,k])]
+            print('Deleting {}'.format('/'.join([heads_base, k])))
+            del repo.get_refs()['/'.join([heads_base, k])]
     print('Fetch complete')
 
+
 def git_push(args):
+    import git.gitutils as gitutils
     parser = argparse.ArgumentParser(prog='git push'
                                      , usage='git push [http(s)://<remote repo> or remote] [-u username[:password]]'
                                      , description="Push to a remote repository")
@@ -555,22 +519,22 @@ def git_push(args):
     parser.add_argument('-u', metavar='username[:password]', type=str, required=False, help='username[:password]')
     result = parser.parse_args(args)
 
-    user, sep, pw = result.u.partition(':') if result.u else (None,None,None)
+    user, sep, pw = result.u.partition(':') if result.u else (None, None, None)
 
     repo = _get_repo()
 
     origin='origin'
     if not result.url:
-        result.url = repo.remotes.get('origin','')
-    if result.url in repo.remotes:
+        result.url = gitutils.get_remotes(repo).get('origin','')
+    if result.url in gitutils.get_remotes(repo):
         origin=result.url
-        result.url=repo.remotes.get(origin)
+        result.url=gitutils.get_remotes(repo).get(origin)
 
     branch_name = os.path.join('refs','heads', repo.active_branch)  #'refs/heads/%s' % repo.active_branch
 
     print("Attempting to push to: {0}, branch: {1}".format(result.url, branch_name))
 
-    netloc = urlparse(result.url).netloc
+    netloc = urlparse.urlparse(result.url).netloc
 
     keychainservice = 'stash.git.{0}'.format(netloc)
 
@@ -598,21 +562,23 @@ def git_push(args):
         if not pw:
             user, pw = console.login_alert('Enter credentials for {0}'.format(netloc), login=user)
         host_with_auth='{}:{}@{}'.format(user,pw,netloc)
-        url=urlunparse(
-            urlparse(result.url)._replace(
+        url=urlparse.urlunparse(
+            urlparse.urlparse(result.url)._replace(
                 netloc=host_with_auth))
-        porcelain.push(repo.repo.path, url, branch_name, errstream=outstream)
+        porcelain.push(repo.path, url, branch_name, errstream=outstream)
         keychain.set_password(keychainservice, user, pw)
 
     else:
-        porcelain.push(repo.repo.path, result.url, branch_name, errstream=outstream)
+        porcelain.push(repo.path, result.url, branch_name, errstream=outstream)
  
     for line in outstream.getvalue().split('\n'):
         print((line.replace(pw, '*******') if pw else line))
     
     print('success!')
 
+
 def git_modified(args):
+    # TODO: port this
     repo = _get_repo()
     for mod_file in repo.modified_files:
         print(mod_file)
@@ -645,7 +611,7 @@ def git_log(args):
     try:
         repo = _get_repo()
         outstream = StringIO()
-        porcelain.log(repo.repo.path, max_entries=results.max_entries,outstream=outstream)
+        porcelain.log(repo.path, max_entries=results.max_entries,outstream=outstream)
         
         if not results.oneline:
             print(outstream.getvalue())
@@ -683,11 +649,11 @@ def git_diff(args):
     '''prints diff of currently staged files to console.. '''
     repo=_get_repo()
 
-    index=repo.repo.open_index()
-    store=repo.repo.object_store
+    index=repo.open_index()
+    store=repo.object_store
     index_sha=index.commit(store)
     #tree_ver=store[tree.lookup_path(store.peel_sha,file)[1]].data
-    porcelain.diff_tree('.',repo[repo['HEAD'].tree].id,repo[index_sha].id, sys.stdout)
+    porcelain.diff_tree('.', repo[repo['HEAD'].tree].id, repo[index_sha].id, sys.stdout)
 
 
 def git_checkout(args):
@@ -695,25 +661,31 @@ def git_checkout(args):
     if len(args) in [1,2]:
         repo = _get_repo()
         _confirm_dangerous()
-        if os.path.exists(os.path.join(repo.repo.controldir(),'MERGE_HEAD')) :
+        if os.path.exists(os.path.join(repo.controldir(),'MERGE_HEAD')) :
             #just cancel in progress merge
-            os.remove(os.path.join(repo.repo.controldir(),'MERGE_HEAD'))
-            os.remove(os.path.join(repo.repo.controldir(),'MERGE_MSG'))
+            os.remove(os.path.join(repo.controldir(),'MERGE_HEAD'))
+            os.remove(os.path.join(repo.controldir(),'MERGE_MSG'))
         if len(args) == 1:
             branchname=args[0]
-            if branchname in repo.branches:
-                branch_ref=repo._format_ref_branch(branchname)
-                repo.repo.refs.set_symbolic_ref('HEAD',branch_ref)
-                repo.checkout_all()
+            if branchname in porcelain.branch_list(repo.path):
+                # branch_ref=repo._format_ref_branch(branchname)
+                # repo.repo.refs.set_symbolic_ref('HEAD',branch_ref)
+                porcelain.update_head(repo.path, commit)
+                # repo.checkout_all()
+                indexfile = repo.index_path()
+                tree = repo["HEAD"].tree
+                build_index_from_tree(repo.path, indexfile, repo.object_store, tree)
+                # TODO: port the following line
             repo.switch_branch('{0}'.format(args[0]))
     
         #Temporary hack to get create branch into source
-        #TODO: git functions should probably all user parseargs, like git push
+        # TODO: git functions should probably all user parseargs, like git push
         if len(args) == 2:
             if args[0] == '-b':
                 #TODO: Add tracking as a parameter
                 print("Creating branch {0}".format(args[1]))
-                repo.create_branch(repo.active_branch, args[1], tracking=None)
+                # repo.create_branch(repo.active_branch, args[1], tracking=None)
+                porcelain.branch_create(repo.path, args[1])
                 #Recursive call to checkout the branch we just created
                 git_checkout([args[1]])
         else:
@@ -768,7 +740,7 @@ if __name__=='__main__':
 
     ap = argparse.ArgumentParser()
     subparser=ap.add_subparsers()
-    for key,value in iteritems(commands):
+    for key,value in commands.iteritems():
         sp=subparser.add_parser(key, help=command_help[key] ,add_help=False)
         sp.set_defaults(func=commands[key])
     ns,args=ap.parse_known_args()

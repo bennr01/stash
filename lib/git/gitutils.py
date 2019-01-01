@@ -1,8 +1,7 @@
 import sys,os
 import dulwich
-from dulwich import porcelain
+from dulwich import porcelain, repo
 from dulwich.walk import Walker
-from gittle import Gittle
 
 
 class GitError(Exception):
@@ -22,13 +21,13 @@ def _find_repo(path):
 
 #Get the parent git repo, if there is one
 def _get_repo():
-    return Gittle(_find_repo(os.getcwd()))
+    return repo.Repo(_find_repo(os.getcwd()))
 
 def any_one(iterable):
     it = iter(iterable)
     return any(it) and not any(it)
 
-def find_revision_sha(repo,rev):
+def find_revision_sha(repo, rev):
     '''rev may refer to the following ways to "spell" a commit object:
     <sha1>  full or abbreviated sha, only if unique
     <ref>  search in local refs, then remote refs.
@@ -45,7 +44,7 @@ def find_revision_sha(repo,rev):
     if rev in repo:
         return repo[rev].id
         
-    o=repo.repo.object_store
+    o=repo.object_store
 
     returnval = repo.refs.get(rev) or repo.tags.get(rev) or repo.branches.get(rev) or repo.remote_branches.get(rev)
     if returnval:
@@ -68,7 +67,7 @@ merge base for a pair of commits.'''
     sha1=find_revision_sha(repo,rev1)
     sha2=find_revision_sha(repo,rev2)
           
-    sha2_ancestors,_=repo.repo.object_store._collect_ancestors([sha2],[])
+    sha2_ancestors,_=repo.object_store._collect_ancestors([sha2],[])
     merge_bases=[]
     queue=[sha1]
     seen=[]
@@ -83,27 +82,27 @@ merge base for a pair of commits.'''
                 queue.extend(repo[elt].parents)
     return merge_bases
     
-def count_commits_between(repo,rev1,rev2):
+def count_commits_between(repo, rev1, rev2):
     '''find common ancestor. then count ancestor->sha1, and ancestor->sha2 '''
-    sha1=find_revision_sha(repo,rev1)
-    sha2=find_revision_sha(repo,rev2)
+    sha1=find_revision_sha(repo, rev1)
+    sha2=find_revision_sha(repo, rev2)
     if sha1==sha2:
         return (0,0)
-    sha1_ahead= sum(1 for _ in Walker(repo.repo.object_store,[sha1],[sha2]))
-    sha1_behind=sum(1 for _ in Walker(repo.repo.object_store,[sha2],[sha1]))
+    sha1_ahead= sum(1 for _ in Walker(repo.object_store,[sha1],[sha2]))
+    sha1_behind=sum(1 for _ in Walker(repo.object_store,[sha2],[sha1]))
     return (sha1_ahead,sha1_behind)
     
-def is_ancestor(repo,rev1,rev2):
+def is_ancestor(repo, rev1, rev2):
     '''return true if rev1 is an ancestor of rev2'''
-    sha1=find_revision_sha(repo,rev1)
-    sha2=find_revision_sha(repo,rev2)
-    return True if sha1 in merge_base(repo,sha1,sha2) else False
+    sha1=find_revision_sha(repo, rev1)
+    sha2=find_revision_sha(repo, rev2)
+    return True if sha1 in merge_base(repo, sha1, sha2) else False
     
-def can_ff(repo,oldrev,newrev):
-    return merge_base(repo,oldrev,newrev)==[oldrev]
+def can_ff(repo, oldrev, newrev):
+    return merge_base(repo, oldrev,newrev)==[oldrev]
     
-def get_remote_tracking_branch(repo,branchname):
-    config = repo.repo.get_config()
+def get_remote_tracking_branch(repo, branchname):
+    config = repo.get_config()
     try:
         remote=config.get(('branch',branchname),'remote')
         merge=config.get(('branch',branchname),'merge')
@@ -111,3 +110,47 @@ def get_remote_tracking_branch(repo,branchname):
         return remote+'/'+remotebranch
     except KeyError:
         return None
+
+
+def get_remotes(repo):
+    """return a dict of {remotename: url}"""
+    # extracted from gittle
+    config = repo.get_config()
+    return {
+        keys[1]: values["url"]
+        for key, values in config.items()
+        if keys[0] == "remote"
+    }
+
+
+def subrefs(refs_dict, base):
+    """
+    Return the contents of this container as a dictionary.
+    """
+    # copied from gittle
+    base = base or ''
+    keys = list(refs_dict.keys())
+    subkeys = list(map(
+        partial(subkey, base),
+        keys
+    ))
+    key_pairs = list(zip(keys, subkeys))
+
+    return {
+        newkey: refs_dict[oldkey]
+        for oldkey, newkey in key_pairs
+        if newkey
+    }
+
+def clean_refs(refs):
+    # copied from gittle
+    return {
+        ref: sha
+        for ref, sha in list(refs.items())
+        if not ref.endswith('^{}')
+    }
+
+
+def get_active_branch(repo):
+    """return the name of the active branch."""
+    return repo.refs.follow('HEAD')[0][-1]

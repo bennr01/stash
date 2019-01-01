@@ -9,7 +9,7 @@ from dulwich.diff_tree import _NULL_ENTRY, TreeEntry, _is_tree, _tree_entries
 from git import diff3, git_reset
 from git.gitutils import (GitError, _get_repo, count_commits_between,
                           find_revision_sha, get_remote_tracking_branch,
-                          merge_base)
+                          merge_base, get_active_branch)
 
 
 def _merge_entries(path, trees):
@@ -172,23 +172,23 @@ def merge(args):
     if result.abort:
         print('attempting to undo merge.  beware, files in working tree are not touched.  \nused git reset --hard to revert particular files')
         git_reset([])
-        os.remove(os.path.join(repo.repo.controldir(),'MERGE_HEAD'))
-        os.remove(os.path.join(repo.repo.controldir(),'MERGE_MSG'))
+        os.remove(os.path.join(repo.controldir(), 'MERGE_HEAD'))
+        os.remove(os.path.join(repo.controldir(), 'MERGE_MSG'))
 
     #todo: check for uncommitted changes and confirm
     
     # first, determine merge head
-    merge_head = find_revision_sha(repo,result.commit or get_remote_tracking_branch(repo,repo.active_branch))
+    merge_head = find_revision_sha(repo, result.commit or get_remote_tracking_branch(repo, get_active_branch(repo)))
     if not merge_head:
         raise GitError('must specify a commit sha, branch, remote tracking branch to merge from.  or, need to set-upstream branch using git branch --set-upstream <remote>[/<branch>]')
+    
+    head = find_revision_sha(repo, get_active_branch(repo))
 
-    head=find_revision_sha(repo,repo.active_branch)
+    base_sha = merge_base(repo, head, merge_head)[0]  # fixme, what if multiple bases
 
-    base_sha=merge_base(repo,head,merge_head)[0]  #fixme, what if multiple bases
-
-    if base_sha==head:
-        print('Fast forwarding {} to {}'.format(repo.active_branch,merge_head))
-        repo.refs['HEAD']=merge_head
+    if base_sha == head:
+        print('Fast forwarding {} to {}'.format(get_active_branch(repo), merge_head))
+        repo.refs['HEAD'] = merge_head
         return 
     if base_sha == merge_head:
         print('head is already up to date')
@@ -206,8 +206,8 @@ def merge(args):
     if removed: 
         porcelain.rm(repo.path, removed)
 
-    repo.repo._put_named_file('MERGE_HEAD',merge_head)
-    repo.repo._put_named_file('MERGE_MSG','Merged from {}({})'.format(merge_head, result.commit))
+    repo._put_named_file('MERGE_HEAD',merge_head)
+    repo._put_named_file('MERGE_MSG','Merged from {}({})'.format(merge_head, result.commit))
     print('Merge complete with {} conflicted files'.format(num_conflicts))
     print('''Merged files were added to the staging area, but have not yet been comitted.   
     Review changes (e.g.   git diff   or   git diff>changes.txt; edit changes.txt    ), and 
