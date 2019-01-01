@@ -261,7 +261,8 @@ def git_init(args):
     if len(args) == 1:
         Gittle.init(args[0])
     else:
-        print(command_help['init'])
+        # print(command_help['init'])
+        Gittle.init(".")
 
 def git_status(args):
     if len(args) == 0:
