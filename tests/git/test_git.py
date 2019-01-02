@@ -95,3 +95,51 @@ class GitTests(StashTestCase):
         self.assertIn(".git", files)
         # check that git status exits with 0
         self.run_command("git status", exitcode=0)
+    
+    def test_git_clone_http(self):
+        """test git clone on a HTTP target"""
+        remote = "http://github.com/ywangd/stash.git"
+        target = "stash"
+        # ensure there is no old target directory
+        files = os.listdir(".")
+        self.assertNotIn(target, files)
+        # clone
+        self.run_command("git clone " + remote, exitcode=0)
+        # test
+        self.cd(target)
+        files = os.listdir(".")
+        self.assertIn(".git", files)
+        self.run_command("git status", exitcode=0)
+    
+    def test_git_clone_https(self):
+        """test git clone on a HTTPS target"""
+        remote = "https://github.com/ywangd/stash.git"
+        target = "stash"
+        # ensure there is no old target directory
+        files = os.listdir(".")
+        self.assertNotIn(target, files)
+        # clone
+        self.run_command("git clone " + remote, exitcode=0)
+        # test
+        self.cd(target)
+        files = os.listdir(".")
+        self.assertIn(".git", files)
+        self.run_command("git status", exitcode=0)
+    
+    def test_git_clone_https_custom_target(self):
+        """test git clone on a HTTPS target"""
+        remote = "https://github.com/ywangd/stash.git"
+        target = "testclone"
+        # ensure there is no old target directory
+        files = os.listdir(".")
+        self.assertNotIn(target, files)
+        # clone
+        self.run_command("git clone " + remote + " " + target, exitcode=0)
+        # test
+        self.cd(target)
+        files = os.listdir(".")
+        self.assertIn(".git", files)
+        self.run_command("git status", exitcode=0)
+    
+    # TODO: tests for git clone on ssh
+    
