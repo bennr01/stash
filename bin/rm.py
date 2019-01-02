@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import sys
 import shutil
+import glob
 from argparse import ArgumentParser
 
 from six.moves import input
@@ -64,8 +65,18 @@ def main(args):
     else:
         def prompt(file):
             return True
-
-    for path in ns.paths:
+    
+    # resolve *
+    paths = []
+    for p in ns.paths:
+        paths += list(glob.glob(p))
+    
+    if len(paths) == 0:
+        exitcode = 1
+    else:
+        exitcode = 0
+    
+    for path in paths:
         if os.path.isfile(path):
             if prompt(path):
                 try:
@@ -74,6 +85,7 @@ def main(args):
                 except:
                     if not ns.force:
                         print('%s: unable to remove' % path)
+                        exitcode = 1
 
         elif os.path.isdir(path) and ns.recursive:
             if prompt(path):
@@ -83,12 +95,17 @@ def main(args):
                 except:
                     if not ns.force:
                         print('%s: unable to remove' % path)
+                        exitcode = 1
 
         elif os.path.isdir(path):
             print('%s: is a directory' % path)
+            exitcode = 1
         else:
             if not ns.force:
                 print('%s: does not exist' % path)
+                exitcode = 1
+    
+    sys.exit(exitcode)
 
 
 if __name__ == '__main__':
