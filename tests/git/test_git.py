@@ -18,6 +18,7 @@ class GitTests(StashTestCase):
     def empty_cwd(self):
         """delete everything in self.cwd)."""
         self.run_command("rm -r " + os.path.join(self.cwd, "*"))  # ignore exitcode in case it was already empty
+        self.run_command("rm -r .git")
     
     def test_git_status_fail_in_empty(self):
         """ensure 'git status' fails in an empty directory."""
@@ -81,7 +82,7 @@ class GitTests(StashTestCase):
     
     def test_git_init_path_wo_mkdir(self):
         """test 'git init <path>' with nonexistent path."""
-        reponame = "init_path__wo_mkdir_test"
+        reponame = "init_path_wo_mkdir_test"
         # init repo
         self.run_command("git init " + reponame, exitcode=0)
          # check that .git was not created in cwd
