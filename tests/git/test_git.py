@@ -1,8 +1,9 @@
 """tests for the git command."""
 import os
 import tempfile
+import unittest
 
-from stash.tests.stashtest import StashTestCase
+from stash.tests.stashtest import StashTestCase, requires_network
 
 
 class GitTests(StashTestCase):
@@ -96,6 +97,8 @@ class GitTests(StashTestCase):
         # check that git status exits with 0
         self.run_command("git status", exitcode=0)
     
+    @unittest.expectedFailure  # some trouble with github closing the connection immediately
+    @requires_network
     def test_git_clone_http(self):
         """test git clone on a HTTP target"""
         remote = "http://github.com/ywangd/stash.git"
@@ -111,6 +114,7 @@ class GitTests(StashTestCase):
         self.assertIn(".git", files)
         self.run_command("git status", exitcode=0)
     
+    @requires_network
     def test_git_clone_https(self):
         """test git clone on a HTTPS target"""
         remote = "https://github.com/ywangd/stash.git"
@@ -126,6 +130,7 @@ class GitTests(StashTestCase):
         self.assertIn(".git", files)
         self.run_command("git status", exitcode=0)
     
+    @requires_network
     def test_git_clone_https_custom_target(self):
         """test git clone on a HTTPS target"""
         remote = "https://github.com/ywangd/stash.git"
