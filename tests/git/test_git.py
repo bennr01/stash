@@ -28,7 +28,7 @@ class GitTests(StashTestCase):
         if os.path.exists(dirname):
             self.run_command("rm " + dirname, exitcode=0)
         self.run_command("mkdir " + dirname, exitcode=0)
-        self.run_command("cd " + dirname, exitcode=0)
+        self.cd(dirname)
         # check that the new directory does not contain a .git directory
         files = os.listdir(".")
         self.assertNotIn(".git", files)
@@ -42,7 +42,7 @@ class GitTests(StashTestCase):
         if os.path.exists(reponame):
             self.run_command("rm " + reponame, exitcode=0)
         self.run_command("mkdir " + reponame, exitcode=0)
-        self.run_command("cd " + reponame, exitcode=0)
+        self.cd(reponame)
         # check that the new directory does not already contain a .git directory
         files = os.listdir(".")
         self.assertNotIn(".git", files)
@@ -61,19 +61,19 @@ class GitTests(StashTestCase):
         if os.path.exists(reponame):
             self.run_command("rm " + reponame, exitcode=0)
         self.run_command("mkdir " + reponame, exitcode=0)
-        self.run_command("cd " + reponame, exitcode=0)
+        self.cd(reponame)
         # check that the new directory does not already contain a .git directory
         files = os.listdir(".")
         self.assertNotIn(".git", files)
         # cd out
-        self.run_command("cd ..", exitcode=0)
+        self.cd("..")
         # init repo
         self.run_command("git init " + reponame, exitcode=0)
          # check that .git was not created in cwd
         files = os.listdir(".")
         self.assertNotIn(".git", files)
         # cd into repo
-        self.run_command("cd " + reponame, exitcode=0)
+        self.cd(reponame)
         # check that .git exists
         files = os.listdir(".")
         self.assertIn(".git", files)
@@ -89,7 +89,7 @@ class GitTests(StashTestCase):
         files = os.listdir(".")
         self.assertNotIn(".git", files)
         # cd into repo
-        self.run_command("cd " + reponame, exitcode=0)
+        self.cd(reponame)
         # check that .git exists
         files = os.listdir(".")
         self.assertIn(".git", files)

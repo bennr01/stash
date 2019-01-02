@@ -102,6 +102,7 @@ class StashTestCase(unittest.TestCase):
         self.logger.info("Target CWD is: "+ str(self.cwd))
         self.stash('cd ' + self.cwd, persistent_level=1)
         self.logger.debug("After cd, CWD is: " + os.getcwd())
+        self.command_cwd = self.cwd
 
         for c in self.setup_commands:
             self.logger.debug("executing setup command: " + repr(c))
@@ -138,8 +139,18 @@ class StashTestCase(unittest.TestCase):
         for v in ensure_defined:
             assert v in self.stash.runtime.state.environ.keys(), '%s should be defined' % v
 
-    def run_command(self, command, exitcode=None):
-        """run a command and return its output."""
+    def run_command(self, command, exitcode=None, cwd=None):
+        """
+        Run a command and return its output.
+        :param command: command to run
+        :type command: str
+        :param exitcode: expected exitcode. Raise AssertionError if it does not match
+        :type exitcode: int or None
+        :param cwd: cwd to run command in. defaults to self.cwd
+        :type cwd: str
+        """
+        if cwd is None:
+            cwd = self.command_cwd
         # for debug purposes, locate script
         try:
             scriptname = command.split(" ")[0]
@@ -150,7 +161,7 @@ class StashTestCase(unittest.TestCase):
             # do NOT return here, script may be alias
         outs = StringIO()
         self.logger.info("Executing: " + repr(command))
-        worker = self.stash(command, persistent_level=1, final_outs=outs, final_errs=outs, cwd=self.cwd) #  1 for mimicking running from console
+        worker = self.stash(command, persistent_level=1, final_outs=outs, final_errs=outs, cwd=cwd) #  1 for mimicking running from console
         output = outs.getvalue()
         returnvalue = worker.state.return_value
         self.logger.debug(output)
@@ -158,3 +169,8 @@ class StashTestCase(unittest.TestCase):
         if exitcode is not None:
             assert returnvalue == exitcode, "unexpected exitcode ({e} expected, got {g})\nOutput:\n{o}\n".format(e=exitcode, g=returnvalue, o=output)
         return output
+    
+    def cd(self, path):
+        """runs a cd command, keeping the new cwd for the rest of the tests."""
+        self.run_command("cd " + path, exitcode=0)
+        self.command_cwd = os.getcwd()
