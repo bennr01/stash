@@ -21,6 +21,20 @@ class GitTests(StashTestCase):
         self.run_command("rm -r " + os.path.join(self.cwd, "*"))  # ignore exitcode in case it was already empty
         self.run_command("rm -r .git")
     
+    def clone_and_cd_stash_repo(self):
+        """clone the stash repo, then cd into it."""
+        remote = "https://github.com/ywangd/stash.git"
+        target = "stash"
+        # ensure there is no old target directory
+        files = os.listdir(".")
+        self.assertNotIn(target, files)
+        # clone
+        self.run_command("git clone " + remote, exitcode=0)
+        # test
+        self.cd(target)
+        files = os.listdir(".")
+        self.assertIn(".git", files)
+    
     def test_git_status_fail_in_empty(self):
         """ensure 'git status' fails in an empty directory."""
         # we need this for other tests
@@ -146,5 +160,34 @@ class GitTests(StashTestCase):
         self.assertIn(".git", files)
         self.run_command("git status", exitcode=0)
     
-    # TODO: tests for git clone on ssh
+    # TODO: add tests for git clone on ssh
     
+    @requires_network
+    def test_branch_list_stash_repo(self):
+        """test git branch on the stash repo"""
+        self.clone_and_cd_stash_repo()
+        output = self.run_command("git branch", exitcode=0)
+        self.assertIn("master", output)
+        self.assertIn("dev", output)
+    
+    def test_branch(self):
+        """test creating branches."""
+        # prepare a repo
+        reponame = "git_branch_test"
+        self.run_command("git init " + reponame, exitcode=0)
+        self.cd(reponame)
+        self.run_command("git init test test test", exitcode=0)
+        # test list
+        output = self.run_command("git branch", exitcode=0)
+        self.assertIn("master", output)
+        self.assertNotIn("branchtest", output)
+        # test branch creation
+        self.run_command("git branch branchtest", exitcode=0)
+        output = self.run_command("git branch", exitcode=0)
+        self.assertIn("master", output)
+        self.assertIn("branchtest", output)
+        # test delete
+        self.run_command("git branch -D branchtest", exitcode=0)
+        output = self.run_command("git branch", exitcode=0)
+        self.assertIn("master", output)
+        self.assertNotIn("branchtest", output)
