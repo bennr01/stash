@@ -35,6 +35,29 @@ class GitTests(StashTestCase):
         files = os.listdir(".")
         self.assertIn(".git", files)
     
+    def test_git_help_arg(self):
+        """test 'git --help'"""
+        expected = ["git", "reset", "pull", "push", "add", "clone", "init", "status"]
+        expected += ["log", "diff", "modified", "help", "branch", "commit", "rm"]
+        expected += ["checkout", "fetch", "merge", "-h"]
+        
+        output = self.run_command("git --help", exitcode=0)
+        output2 = self.run_command("git -h", exitcode=0)
+        self.assertEqual(output, output2)
+        for s in expected:
+            self.assertIn(s, output)
+    
+    def test_git_help_command(self):
+        """test 'git help'"""
+        expected = ["git", "reset", "pull", "push", "add", "clone", "init", "status"]
+        expected += ["log", "diff", "modified", "help", "branch", "commit", "rm"]
+        expected += ["checkout", "fetch", "merge", "-h"]
+        
+        output = self.run_command("git help", exitcode=0)
+        for s in expected:
+            self.assertIn(s, output)
+        
+    
     def test_git_status_fail_in_empty(self):
         """ensure 'git status' fails in an empty directory."""
         # we need this for other tests
