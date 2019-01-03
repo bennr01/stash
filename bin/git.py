@@ -348,10 +348,24 @@ def git_rm(args):
 
     else:
         print(command_help['rm'])
-def launch_subcmd(cmd,args):
-    cmdpath=os.path.join(os.environ['STASH_ROOT'],'lib','git',cmd)
 
-    _stash(cmdpath + ' ' + ' '.join(args))
+
+def launch_subcmd(cmd, args):
+    cmdpath = os.path.join(os.environ['STASH_ROOT'], 'lib', 'git', cmd)
+    # TODO: realtime subcmd output
+    outs = StringIO()
+    errs = StringIO()
+    worker = _stash(cmdpath + ' ' + ' '.join(args), final_outs=outs, final_erra=errs)
+    ov = outs.getvalue()
+    if ov not in ("", " ", "\n"):
+        # ignore useless output
+        sys.stdout.write(ov)
+    ev = errs.getvalue()
+    if ev not in ("", " ", "\n"):
+        # ignore useless output
+        sys.stderr.write(ev)
+    sys.exit(worker.return_value)
+    
             
 def git_branch(args):
     launch_subcmd('git-branch.py',args)

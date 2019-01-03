@@ -176,7 +176,7 @@ class GitTests(StashTestCase):
         reponame = "git_branch_test"
         self.run_command("git init " + reponame, exitcode=0)
         self.cd(reponame)
-        self.run_command("git init test test test", exitcode=0)
+        self.run_command("git commit test test test", exitcode=0)
         # test list
         output = self.run_command("git branch", exitcode=0)
         self.assertIn("master", output)
