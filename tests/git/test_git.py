@@ -233,7 +233,7 @@ class GitTests(StashTestCase):
         # commit it with new info
         commit2 = self.run_command("git commit m2 n2 em2").strip()
         # check log against old and new commit
-        output = self.run_command("git status", exitcode=0)
+        output = self.run_command("git log", exitcode=0)
         self.assertIn(commit, output)
         self.assertIn("testmessage", output)
         self.assertIn("testname", output)
