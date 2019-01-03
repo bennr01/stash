@@ -355,7 +355,7 @@ def launch_subcmd(cmd, args):
     # TODO: realtime subcmd output
     outs = StringIO()
     errs = StringIO()
-    worker = _stash(cmdpath + ' ' + ' '.join(args), final_outs=outs, final_erra=errs)
+    worker = _stash(cmdpath + ' ' + ' '.join(args), final_outs=outs, final_errs=errs)
     ov = outs.getvalue()
     if ov not in ("", " ", "\n"):
         # ignore useless output
