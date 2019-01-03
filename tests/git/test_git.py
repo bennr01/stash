@@ -214,3 +214,32 @@ class GitTests(StashTestCase):
         output = self.run_command("git branch", exitcode=0)
         self.assertIn("master", output)
         self.assertNotIn("branchtest", output)
+    
+    def test_git_log(self):
+        """test 'git log'"""
+         # prepare a repo
+        reponame = "git_log_test"
+        self.run_command("git init " + reponame, exitcode=0)
+        self.cd(reponame)
+        commit = self.run_command("git commit testmessage testname testmail", exitcode=0).strip()
+        output = self.run_command("git log", exitcode=0)
+        self.assertIn(commit, output)
+        self.assertIn("testmessage", output)
+        self.assertIn("testname", output)
+        self.assertIn("testmail", output)
+        # add a new file for a second commit
+        self.run_command("touch newfile.txt", exitcode=0)
+        self.run_command("git add newfile.txt", exitcode=0)
+        # commit it with new info
+        commit2 = self.run_command("git commit m2 n2 em2").strip()
+        # check log against old and new commit
+        output = self.run_command("git status", exitcode=0)
+        self.assertIn(commit, output)
+        self.assertIn("testmessage", output)
+        self.assertIn("testname", output)
+        self.assertIn("testmail", output)
+        self.assertIn(commit2, output)
+        self.assertIn("m2", output)
+        self.assertIn("n2", output)
+        self.assertIn("em2", output)
+    
