@@ -364,7 +364,7 @@ def launch_subcmd(cmd, args):
     if ev not in ("", " ", "\n"):
         # ignore useless output
         sys.stderr.write(ev)
-    sys.exit(worker.return_value)
+    sys.exit(worker.state.return_value)
     
             
 def git_branch(args):
