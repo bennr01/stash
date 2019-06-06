@@ -102,3 +102,14 @@ class SelfupdateTests(StashTestCase):
         self.assertNotIn("Already at latest version", output)
         self.assertNotIn("New version available", output)
         self.assertIn("Error: ", output)
+    
+    def test_getstash_noencoding(self):
+        """
+        Ensure $STASH_ROOT/getstash.py has no encoding specified.
+        Otherwise, selfupdate may fail.
+        """
+        output = self.run_command(
+            "cat $STASH_ROOT/getstash.py",
+            exitcode=0,
+            )
+        self.assertNotIn("coding:", output)
