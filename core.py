@@ -3,6 +3,11 @@
 StaSh - Pythonista Shell
 
 https://github.com/ywangd/stash
+
+@var __version__: the version of StaSh
+@type __version__: L{str}
+@var LOGGER: a logger. It does not seem to be used anywhere.
+@type LOGGER: L{logging.logger}
 """
 
 __version__ = '0.7.4'
@@ -98,11 +103,62 @@ class StaSh(object):
     """
     Main application class. It initialize and wires the components and provide
     utility interfaces to running scripts.
+    
+    @cvar PY3: True if running on py3
+    @type PY3: bool
+    
+    @ivar __version__: the StaSh version in use. StaSh uses semantic versioning.
+    @type __version__: L{str}
+    @ivar config: the configuration
+    @type config: L{six.moves.configparser.ConfigParser}
+    @ivar logger: the main StaSh logger
+    @type logger: L{logging.Logger}
+    @ivar enable_styles: if False, disable styles
+    @type enable_styles: L{bool}
+    @ivar user_action_proxy: the object responsible for delegating user input
+    @type user_action_proxy: L{stash.system.shuseractionproxy.ShUserActionProxy}
+    @ivar external_tab_handler: external tab handler
+    @type external_tab_handler:
+    @ivar main_screen: in-memory screen
+    @type main_screen: L{stash.system.shscreens.ShSequentialScreen}
+    @ivar minibuffer: user input buffer (?)
+    @type minibuffer: L{stash.system.shstreams.ShMiniBuffer}
+    @ivar stream: toplevel I/O stream
+    @type stream: L{stash.system.shstreams.ShStream}
+    @ivar io: file-like object for script I/O
+    @type io: L{stash.system.shio.ShIO}
+    @ivar ui: the 'physical'/OS-level UI
+    @type ui: L{stash.system.shui.base.ShBaseUI}
+    @ivar terminal: The multi-line text widget the user sees
+    @type terminal: L{stash.system.shui.base.ShBaseTerminal}
+    @ivar renderer: Renderer responsible for rendering the in-memory screen to the terminal
+    @type renderer: L{stash.system.shui.base.ShBaseSequentialRenderer}
+    @ivar runtime: The object responsible for parsing and executing commands.
+    @type runtime: L{stash.system.shruntime.ShRuntime}
+    @ivar completer: the object responsile for auto-completion.
+    @type completer: L{stash.system.shparsers.ShCompleter}
+    
+    @ivar lib*: libraries loaded from '$STASH_ROOT/lib/lib*'
+    @type lib*: L{types.ModuleType}
     """
 
     PY3 = six.PY3
 
     def __init__(self, debug=(), log_setting=None, no_cfgfile=False, no_rcfile=False, no_historyfile=False, command=None):
+        """
+        @param debug: debug flags
+        @type debug: L{tuple} of L{int}
+        @param log_setting: log settings
+        @type log_setting: L{dict} or L{None}
+        @param no_cfgfile: do not load configfile
+        @type no_cfgfile: L{bool}
+        @param no_rcfile: do not load the resource file
+        @type no_rcfile: L{bool}
+        @param no_historyfile: do not load the history
+        @type no_historyfile: L{bool}
+        @param command: command to execute on startup. If None, use default. If nonzero, use given value.
+        @type command: L{str} or L{bool} or L{None}
+        """
         self.__version__ = __version__
 
         # Intercept IO
@@ -191,14 +247,27 @@ class StaSh(object):
             self(command, add_to_history=False, persistent_level=0)
 
     def __call__(self, input_, persistent_level=2, *args, **kwargs):
-        """ This function is to be called by external script for
-         executing shell commands """
+        """
+        Execute one or more shell commands.
+        
+        The commands will be executed in one or more threads, but will be L{threading.Thread.join}ed before return.
+        All arguments will be passed to L{stash.runtime.ShRuntime.run}()
+        @param input_: input to execute.
+        @type input_: L{str} or L{List} or L{stash.system.shio.ShIO} L{stash.system.shparsers.ShPipeSequence} or L{None}
+        """
         worker = self.runtime.run(input_, persistent_level=persistent_level, *args, **kwargs)
         worker.join()
         return worker
 
     @staticmethod
     def _load_config(no_cfgfile=False):
+        """
+        Load the configuration file.
+        @param no_cfgfile: if True, do not load the configuration file.
+        @type no_cfgfile: L{bool}
+        @return: the configuration
+        @rtype: L{six.moves.configparser.ConfigParser}
+        """
         config = ConfigParser()
         config.optionxform = str  # make it preserve case
 
@@ -216,6 +285,13 @@ class StaSh(object):
 
     @staticmethod
     def _config_logging(log_setting):
+        """
+        Create and configure L{logging}..
+        @param log_setting: log options
+        @type log_setting: L{None} or L{dict}
+        @return: a configured logger
+        @rtype: L{logging.Logger}
+        """
 
         logger = logging.getLogger('StaSh')
 
@@ -256,6 +332,7 @@ class StaSh(object):
     def _load_lib(self):
         """
         Load library files as modules and save each of them as attributes
+        Library files are files matching "$STASH_ROOT/lib/lib*.py".
         """
         lib_path = os.path.join(_STASH_ROOT, 'lib')
         os.environ['STASH_ROOT'] = _STASH_ROOT  # libcompleter needs this value
@@ -277,9 +354,11 @@ class StaSh(object):
         """
         Write a message to the output.
         @param s: message to write
-        @type w: str
-        @param error: whether this is an error message
-        @type error: bool
+        @type s: L{str}
+        @param error: whether this is an error message or not
+        @type error: L{bool}
+        @param prefix: prefix to write before the message.
+        @type prefix: L{str}
         """
         s = '%s%s\n' % (prefix, s)
         if error:
@@ -295,6 +374,7 @@ class StaSh(object):
     def launch(self, command=None):
         """
         Launch StaSh, presenting the UI.
+        @param command: currently ignored
         """
         self.ui.show()
         # self.terminal.set_focus()
@@ -303,7 +383,7 @@ class StaSh(object):
         """
         Quit StaSh.
         StaSh is based arround the UI, so we delegate this task to the UI,
-        which in turn will call self.on_exit().
+        which in turn will call L{stash.core.StaSh.on_exit}.
         """
         self.ui.close()
     
@@ -327,7 +407,7 @@ class StaSh(object):
         """
         Return a list of all workers..
         @return: a list of all workers
-        @rtype: list of [stash.system.shtreads.BaseThread]
+        @rtype: L{list} of L{stash.system.shthreads.ShBaseThread}
         """
         return [worker for worker in self.runtime.worker_registry]
 
@@ -337,10 +417,14 @@ class StaSh(object):
         """
         Style the given string with ASCII escapes.
 
-        @param str s: String to decorate
-        @param dict style: A dictionary of styles
-        @param bool always: If true, style will be applied even for pipes.
-        @return:
+        @param s: String to decorate
+        @type s: L{str}
+        @param style: A dictionary of styles
+        @type style: L{dict}
+        @param always: If L{True}, style will be applied even for pipes.
+        @type always: L{bool}
+        @return: the decorated string
+        @rtype: L{six.text_type}
         """
         # No color for pipes, files and Pythonista console
         if not self.enable_styles or (not always and (isinstance(sys.stdout,
@@ -374,22 +458,43 @@ class StaSh(object):
         return s
 
     def text_color(self, s, color_name='default', **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'color': color_name}, **kwargs)
 
     def text_bgcolor(self, s, color_name='default', **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'bgcolor': color_name}, **kwargs)
 
     def text_bold(self, s, **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'traits': ['bold']}, **kwargs)
 
     def text_italic(self, s, **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'traits': ['italic']}, **kwargs)
 
     def text_bold_italic(self, s, **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'traits': ['bold', 'italic']}, **kwargs)
 
     def text_underline(self, s, **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'traits': ['underline']}, **kwargs)
 
     def text_strikethrough(self, s, **kwargs):
+        """
+        Convenience shortcut for L{stash.core.StaSh.text_style}.
+        """
         return self.text_style(s, {'traits': ['strikethrough']}, **kwargs)

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+"""
+This module provides dummy functions and classes mainly used for testing.
+"""
 
 class ObjCClass(object):
     def __init__(self, *args, **kwargs):

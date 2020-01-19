@@ -64,11 +64,11 @@ def get_package_data_files(directory, exclude=[]):
     Find data files recursibely.
     Original version from: https://stackoverflow.com/questions/27664504/how-to-add-package-data-recursively-in-python-setup-py
     @param directory: directory to search recursively
-    @type directory: str
+    @type directory: L{str}
     @param exclude: list of absolute paths to ignore
-    @type exclude: list of str
+    @type exclude: L{list} of L{str}
     @return: package data files to include
-    @rtype: list of str
+    @rtype: L{list} of L{str}
     """
     paths = []
     for (path, directories, filenames) in os.walk(directory):
@@ -87,9 +87,9 @@ def get_stash_version(corepath):
     """
     Find and return the current StaSh version.
     @param corepath: path to the 'core.py' file in the StaSh root directory
-    @type corepath: str
+    @type corepath: L{str}
     @return: the StaSh version defined in the corepath
-    @rtype: str
+    @rtype: L{str}
     """
     with open(corepath, "r") as fin:
         for line in fin:

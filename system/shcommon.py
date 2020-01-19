@@ -1,6 +1,54 @@
 # -*- coding: utf-8 -*-
 """
-The Control, Escape and Graphics are taken from pyte (https://github.com/selectel/pyte)
+Classes, functions and constants used by various parts of StaSh.
+The Control, Escape and Graphics are taken from pyte (U{https://github.com/selectel/pyte})
+
+@var IN_PYTHONISTA: True if running in the pythonista app.
+@type IN_PYTHONISTA: L{bool}
+@var PYTHONISTA_VERSION: the pythonista version
+@type PYTHONISTA_VERSION: L{str}
+@var PYTHONISTA_VERSION_LONG: the long pythonista version
+@type PYTHONISTA_VERSION_LONG:
+@var python_capi: the python c api
+@type python_capi:
+@var platform_string: a string describing the platform StaSh is running on
+@type platform_string: L{str}
+@var ON_IPAD: True if running on an iPad
+@type ON_IPAD: L{bool}
+@var ON_IOS_8: True if running on iOS 8
+@type ON_IOS_8: L{bool}
+@var M_64: True if running on a 64 bit machine
+@type M_64: L{bool}
+@var CTRL_KEY_FLAG: Control key for keyCommands
+@type CTRL_KEY_FLAG: L{int}
+@var CMD_KEY_FLAG:Command key for keyCommands
+@type CMD_KEY_FLAG: L{int}
+
+@var K_CC: symbolic value for ctrl-c
+@type K_CC: L{int}
+@var K_CD: symbolic value for ctrl-d
+@type K_CD: L{int}
+@var K_HUP: symbolic value for arrow up
+@type K_HUP: L{int}
+@var K_HDN: symbolic value for arrow down
+@type K_HDN: L{int}
+@var K_LEFT: symbolic value for arrow left
+@type K_LEFT: L{int}
+@var K_RIGHT: symbolic value for arrow right
+@type K_RIGHT: L{int}
+@var K_CU: symbolic value for ctrl-u
+@type K_CU: L{int}
+@var K_TAB: symbolic value for tab
+@type K_TAB: L{int}
+@var K_HIST: symbolic value for ctrl-h
+@type K_HIST: L{int}
+@var K_CZ: symbolic value for ctrl-z
+@type K_CZ: L{int}
+@var K_KB: symbolic value for the hide-keyboard-key
+@type K_KB: L{int}
+
+@var PY3: True if running on python3
+@type PY3: L{bool}
 """
 import os
 import sys
@@ -100,13 +148,31 @@ if IN_PYTHONISTA:
     else:
 
         class StdinCatcher(object):
+            """
+            Class for capturing pythonista stdin.
+            
+            @ivar encoding: the encoding
+            @type encoding: L{str}
+            """
             def __init__(self):
                 self.encoding = 'utf8'
 
             def read(self, limit=-1):
+                """
+                Read from input.
+                @param limit: max amount to read
+                @type limit: L{int}
+                @return: the user input
+                @rtype: 
+                """
                 return _outputcapture.ReadStdin(limit)
 
             def readline(self):
+                """
+                Read a line from input.
+                @return: the user input
+                @rtype: 
+                """
                 return _outputcapture.ReadStdin()
 
         _SYS_STDIN = StdinCatcher()
@@ -118,19 +184,38 @@ if IN_PYTHONISTA:
     else:
 
         class StdoutCatcher(object):
+            """
+            Class for capturing pythonista stdout.
+            
+            @ivar encoding: the encoding
+            @type encoding: L{str}
+            """
             def __init__(self):
                 self.encoding = 'utf8'
 
             def flush(self):
+                """
+                No-op
+                """
                 pass
 
             def write(self, s):
+                """
+                Write s to system stdout.
+                @param s: string to write
+                @type s: L{six.text_type} or  L{six.binary_type}
+                """
                 if isinstance(s, str):
                     _outputcapture.CaptureStdout(s)
                 elif isinstance(s, six.text_type):
                     _outputcapture.CaptureStdout(s.encode('utf8'))
 
             def writelines(self, lines):
+                """
+                Write lines to system stdout.
+                @param s: string to write
+                @type s: L{list} or  L{tuple}
+                """
                 self.write(''.join(lines))
 
         _SYS_STDOUT = StdoutCatcher()
@@ -142,19 +227,38 @@ if IN_PYTHONISTA:
     else:
 
         class StderrCatcher(object):
+            """
+            Class for capturing pythonista stderr.
+            
+            @ivar encoding: the encoding
+            @type encoding: L{str}
+            """
             def __init__(self):
                 self.encoding = 'utf8'
 
             def flush(self):
+                """
+                No-op
+                """
                 pass
 
             def write(self, s):
+                """
+                Write s to system stderr.
+                @param s: string to write
+                @type s: L{six.text_type} or  L{six.binary_type}
+                """
                 if isinstance(s, str):
                     _outputcapture.CaptureStderr(s)
                 elif isinstance(s, six.text_type):
                     _outputcapture.CaptureStderr(s.encode('utf8'))
 
             def writelines(self, lines):
+                """
+                Write lines to system sterr.
+                @param s: lines to write
+                @type s: L{list} or  L{tuple}
+                """
                 self.write(''.join(lines))
 
         _SYS_STDERR = StderrCatcher()
@@ -170,9 +274,13 @@ _OS_ENVIRON = os.environ
 def is_binary_file(filename, nbytes=1024):
     """
     An approximate way to tell whether a file is binary.
-    @param str filename: The name of the file to be tested.
-    @param int nbytes: number of bytes to read for test
-    @return:
+    
+    @param filename: The name of the file to be tested.
+    @type filename: L{str}
+    @param nbytes: number of bytes to read for test
+    @type nbytes: L{int}
+    @return: True if this file is likely a binary file.
+    @rtype: L{bool}
     """
     with open(filename, 'rb') as ins:
         for c in ins.read(nbytes):
@@ -187,12 +295,30 @@ def is_binary_file(filename, nbytes=1024):
 
 
 def sh_delay(func, nseconds):
+    """
+    Shedule a function for execution in the future.
+    
+    @param func: func to call
+    @type func: L{types.FunctionType}
+    @param nseconds: number of seconds to wait.
+    @type nseconds: L{int} or L{float}
+    @return: the timer
+    @rtype: L{threading.Timer}
+    """
     t = threading.Timer(nseconds, func)
     t.start()
     return t
 
 
 def sh_background(name=None):
+    """
+    Decorator for ensuring a function is called in the background.
+    
+    @param name: how the L{threading.Thread} will be named
+    @type name: L{str}
+    @return: a decorator function
+    @rtype: L{types.FunctionType}
+    """
     def wrap(func):
         @functools.wraps(func)
         def wrapped_func(*args, **kwargs):
@@ -206,14 +332,23 @@ def sh_background(name=None):
 
 
 class ShFileNotFound(Exception):
+    """
+    Exception raised when a file was not found.
+    """
     pass
 
 
 class ShIsDirectory(Exception):
+    """
+    Exception raised when a directory was found but not expected.
+    """
     pass
 
 
 class ShNotExecutable(Exception):
+    """
+    Exception raised when a file is not executable.
+    """
     def __init__(self, filename):
         super(Exception, self).__init__('{}: not executable\n'.format(filename))
 
@@ -231,24 +366,31 @@ class ShBadSubstitution(Exception):
 
 
 class ShSyntaxError(Exception):
+    """
+    Exception raised when a command has invalid syntax.
+    """
     pass
 
 
 class ShInternalError(Exception):
+    """
+    Exception raised when an internal error occurs.
+    """
     pass
 
 
 class Control(object):
     """
-        pyte.control
-        ~~~~~~~~~~~~
+    Enum-like object based on L{pyte.control}.
+    It provides the control sequences.
+    Original doc below.
 
-        This module defines simple control sequences, recognized by
-        :class:`~pyte.streams.Stream`, the set of codes here is for
-        ``TERM=linux`` which is a superset of VT102.
+    This module defines simple control sequences, recognized by
+    :class:`~pyte.streams.Stream`, the set of codes here is for
+    ``TERM=linux`` which is a superset of VT102.
 
-        :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
-        :license: LGPL, see LICENSE for more details.
+    :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
+    :license: LGPL, see LICENSE for more details.
     """
 
     #: *Space*: Not suprisingly -- ``" "``.
@@ -304,14 +446,15 @@ class Control(object):
 
 class Escape(object):
     """
-        pyte.escape
-        ~~~~~~~~~~~
+    Enum-like object based on L{pyte.escape}.
+    It provides the control sequences.
+    Original doc below.
 
-        This module defines both CSI and non-CSI escape sequences, recognized
-        by :class:`~pyte.streams.Stream` and subclasses.
+    This module defines both CSI and non-CSI escape sequences, recognized
+    by :class:`~pyte.streams.Stream` and subclasses.
 
-        :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
-        :license: LGPL, see LICENSE for more details.
+    :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
+    :license: LGPL, see LICENSE for more details.
     """
 
     #: *Reset*.
@@ -461,17 +604,17 @@ class Escape(object):
 
 
 class Graphics(object):
-    # -*- coding: utf-8 -*-
     """
-        pyte.graphics
-        ~~~~~~~~~~~~~
+    Enum-like object based on L{pyte.graphics}.
+    It provides the control sequences.
+    Original doc below.
 
-        This module defines graphic-related constants, mostly taken from
-        :manpage:`console_codes(4)` and
-        http://pueblo.sourceforge.net/doc/manual/ansi_color_codes.html.
+    This module defines graphic-related constants, mostly taken from
+    :manpage:`console_codes(4)` and
+    http://pueblo.sourceforge.net/doc/manual/ansi_color_codes.html.
 
-        :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
-        :license: LGPL, see LICENSE for more details.
+    :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
+    :license: LGPL, see LICENSE for more details.
     """
 
     #: A mapping of ANSI text style codes to style names, "+" means the:

@@ -1,3 +1,35 @@
+"""
+StaSh install script.
+Also used for updates via L{selfupdate}.
+
+B{WARNING}: this module has a toplevel L{main} call!
+
+@var DEFAULT_REPO: default repo to install from
+@type DEFAULT_REPO: L{str}
+@var DEFAULT_BRANCH: default repo to install from
+@type DEFAULT_BRANCH: L{str}
+@var TMPDIR: the temp directory
+@type TMPDIR: L{str}
+@var URL_TEMPLATE: string used to construct URL of StaSh zip.
+@type URL_TEMPLATE: L{str}
+@var TEMP_ZIPFILE: temp path to save zipfile to
+@type TEMP_ZIPFILE: L{str}
+@var URL_PTI: URL to get PTI from
+@type URL_PTI: L{str}
+@var TEMP_PTI: temp path to save PTI to
+@type TEMP_PTI: L{str}
+@var BASE_DIR: base directory of pythonista
+@type BASE_DIR: L{str}
+@var DEFAULT_INSTALL_DIR: default path to install to (on pythonista)
+@type DEFAULT_INSTALL_DIR: L{str}
+@var DEFAULT_PTI_PATH: default path to install PTI to (on pythonista)
+@type DEFAULT_PTI_PATH: L{str}
+@var IN_PYTHONISTA: True if running in Pythonista
+@type IN_PYTHONISTA: L{bool}
+@var UNWANTED_FILES: list of files to remove after install
+@type UNWANTED_FILES: L{list} of L{str}
+
+"""
 from __future__ import print_function
 import os
 import shutil
@@ -12,8 +44,8 @@ DEFAULT_BRANCH = "master"
 TMPDIR = os.environ.get('TMPDIR', os.environ.get('TMP'))
 URL_TEMPLATE = 'https://github.com/{}/stash/archive/{}.zip'
 TEMP_ZIPFILE = os.path.join(TMPDIR, 'StaSh.zip')
-TEMP_PTI = os.path.join(TMPDIR, 'ptinstaller.py')
 URL_PTI = 'https://raw.githubusercontent.com/ywangd/pythonista-tools-installer/master/ptinstaller.py'
+TEMP_PTI = os.path.join(TMPDIR, 'ptinstaller.py')
 BASE_DIR = os.path.expanduser('~')
 DEFAULT_INSTALL_DIR = os.path.join(BASE_DIR, 'Documents/site-packages/stash')
 DEFAULT_PTI_PATH = os.path.join(DEFAULT_INSTALL_DIR, "bin", "ptinstaller.py")
@@ -47,11 +79,13 @@ def download_stash(repo=DEFAULT_REPO, branch=DEFAULT_BRANCH, outpath=TEMP_ZIPFIL
     """
     Download the StaSh zipfile from github.
     @param repo: user owning the repo to download from
-    @type repo: str
+    @type repo: L{str}
     @param branch: branch to download
-    @type branch: str
+    @type branch: L{str}
+    @param outpath: path to write to
+    @type outpath: L{str}
     @param verbose: if True, print additional information
-    @type verbose: bool
+    @type verbose: L{bool}
     """
     url = URL_TEMPLATE.format(repo, branch)
     if verbose:
@@ -71,11 +105,11 @@ def install_pti(url=URL_PTI, outpath=DEFAULT_PTI_PATH, verbose=False):
     """
     Download and install the pythonista tools installer.
     @param url: url to download from
-    @type url: str
+    @type url: L{str}
     @param outpath: path to save to
-    @type outpath: str
+    @type outpath: L{str}
     @param verbose: if True, print additional information
-    @type verbose: bool
+    @type verbose: L{bool}
     """
     if verbose:
         print("Downloading {} to {}".format(url, outpath))
@@ -88,13 +122,13 @@ def install_from_zip(path=TEMP_ZIPFILE, outpath=DEFAULT_INSTALL_DIR, launcher_pa
     """
     Install StaSh from its zipfile.
     @param path: path to zipfile
-    @type path: str
+    @type path: L{str}
     @param outpath: path to extract to
-    @type outpath: str
+    @type outpath: L{str}
     @param launcher_path: path to install launch_stash.py to
-    @type launcher_path: str
-    @param verbose: print additional information
-    @type verbose: bool
+    @type launcher_path: L{str}
+    @param verbose: if True, print additional information
+    @type verbose: L{bool}
     """
     unzip_into(path, outpath, verbose=verbose)
     if launcher_path is not None:
@@ -106,9 +140,11 @@ def unzip_into(path, outpath, verbose=False):
     """
     Unzip zipfile at path into outpath.
     @param path: path to zipfile
-    @type path: str
+    @type path: L{str}
     @param outpath: path to extract to
-    @type outpath: str
+    @type outpath: L{str}
+    @param verbose: if True, print additional information
+    @type verbose: L{bool}
     """
     if not os.path.exists(outpath):
         os.makedirs(outpath)
@@ -148,9 +184,9 @@ def remove_unwanted_files(basepath, reraise=False):
     """
     Remove unwanted files.
     @param basepath: path os StaSh installation
-    @type basepath: str
+    @type basepath: L{str}
     @param reraise: If True, reraise any exception occuring
-    @type reraise: bool
+    @type reraise: L{bool}
     """
     for fname in UNWANTED_FILES:
         try:
@@ -164,17 +200,17 @@ def pythonista_install(install_path, repo=DEFAULT_REPO, branch=DEFAULT_BRANCH, l
     """
     Download and install StaSh and other dependencies for pythonista.
     @param install_path: directory to install into
-    @type install_path: str
+    @type install_path: L{str}
     @param repo: name of user owning the github repo to download/install from
-    @type repo: str
+    @type repo: L{str}
     @param branch: branch to download/install
-    @type repo: str
+    @type branch: L{str}
     @param launcher_path: path to install launcher to
-    @type launcher_path: str
+    @type launcher_path: L{str}
     @param zippath: if not None, it specifies a path to a StaSh zipfile, otherwise download it from repo:branch
-    @type zippath: str
+    @type zippath: L{str}
     @param verbose: if True, print additional information
-    @type verbose: bool
+    @type verbose: L{bool}
     """
     if zippath is None:
         zp = TEMP_ZIPFILE
@@ -207,17 +243,19 @@ def setup_install(repo=DEFAULT_REPO, branch=DEFAULT_BRANCH, install_path=None, a
     """
     Download and install StaSh using setup.py
     @param repo: name of user owning the github repo to download/install from
-    @type repo: str
+    @type repo: L{str}
     @param branch: branch to download/install
-    @type repo: str
+    @type branch: L{str}
     @param install_path: path to install to (as --prefix)
-    @type install_path: str
+    @type install_path: L{str}
     @param as_user: install into user packages
-    @type as_user: bool
+    @type as_user: L{bool}
     @param zippath: alternative path to zip to install from (default: download from repo:branch)
+    @type zippath: L{str}
     @param dryrun: if True, pass --dry-run to setup.py
+    @type dryrun: L{bool}
     @param verbose: if True, print additional information
-    @type verbose: bool
+    @type verbose: L{bool}
     """
     if zippath is None:
         zp = TEMP_ZIPFILE

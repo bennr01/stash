@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 """
-StaSh input history
+StaSh input history.
 """
 from io import open
 import json
@@ -10,15 +10,37 @@ from .shcommon import ShEventNotFound
 
 class ShHistory(object):
     """
-    This class is responsible for input history.
-    @param stash: the StaSh core
-    @type stash: StaSh
+    This class is responsible for the input history.
+    
+    @ivar stash: the associated StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar allow_double: if False, do not save the same line twice in a row
+    @type allow_double: L{str}
+    @var hide_whitespace: if True, do not save lines starting with a space
+    @type hide_whitespace: L{bool}
+    @var ipython_style_history_search: if True, enable an ipython-style history search
+    @type ipython_style_history_search: bool
+    @var maxsize: max number of lines each subhistory is allowed to have.
+    @type maxsize: L{int}
+    @ivar templine: a currently stashed line if the user is browsing the history
+    @type templine: L{str}
+    @ivar idx: the current history index
+    @type idx: L{int}
+    
+    @cvar ENCODING: encoding to store history in.
+    @type ENCODING: L{str}
+    @cvar DEFAULT: default section of history to store
+    @type DEFAULT: L{str}
     """
 
     ENCODING = "utf-8"
     DEFAULT = "_default"
 
     def __init__(self, stash):
+        """
+        @param stash: the StaSh core
+        @type stash: L{stash.core.StaSh}
+        """
         self.stash = stash
         self._histories = {}
         self._current = self.DEFAULT
@@ -33,10 +55,11 @@ class ShHistory(object):
     def load(cls, path, stash):
         """
         Load the history from a path.
+        
         @param path: path to load from.
-        @type path: str
-        @param config: the StaSh core
-        @type config: StaSh
+        @type path: L{str}
+        @param stash: the StaSh core
+        @type stash: L{stash.core.StaSh}
         @return: the history loaded from the file
         @rtype: ShHistory
         """
@@ -53,10 +76,11 @@ class ShHistory(object):
     def load_old_format(cls, path):
         """
         Load the content of an old-style history.
+        
         @param path: path to load from
-        @type path: str
+        @type path: L{str}
         @return: the lines loaded from the file
-        @rtype: list of str
+        @rtype: L{list} of L{str}
         """
         with open(path, "r", encoding=cls.ENCODING) as fin:
             lines = [line.strip() for line in fin.readlines()]
@@ -65,8 +89,9 @@ class ShHistory(object):
     def save(self, path):
         """
         Save the history to a path.
+        
         @param path: path to save to.
-        @type path: str
+        @type path: L{str}
         """
         with open(path, "w", encoding=self.ENCODING) as fout:
             s = json.dumps(self._histories)
@@ -75,8 +100,9 @@ class ShHistory(object):
     def clear(self, target=None):
         """
         Clear the history
+        
         @param target: history to clear or None for current
-        @type history: str or None
+        @type target: L{str} or L{None}
         """
         if target is None:
             target = self._current
@@ -91,19 +117,21 @@ class ShHistory(object):
 
     def swap(self, target):
         """
-        Swap the history
+        Swap the history to the target history.
+        
         @param target: identifier to get the history for
-        @type target: str or None
+        @type target: L{str} or L{None}
         """
         self._current = target
 
     def add(self, line, always=False):
         """
         Add a line to the history.
+        
         @param line: line to add to history
-        @type line: str
+        @type line: L{str}
         @param always: always add this line, regardless of config
-        @type always: bool
+        @type always: L{bool}
         """
         if self._current not in self._histories:
             self._histories[self._current] = []
@@ -128,8 +156,9 @@ class ShHistory(object):
     def getlist(self):
         """
         Return a list of the current history.
+        
         @return: list of current history entries
-        @rtype: list of str
+        @rtype: L{list} of L{str}
         """
         if self._current not in self._histories:
             self._histories[self._current] = []
@@ -138,10 +167,11 @@ class ShHistory(object):
     def search(self, tok):
         """
         Search the history.
+        
         @param tok:
         @type tok:
         @return: last entry in history matching the search
-        @rtype: str
+        @rtype: L{str}
         """
         history = self.getlist()
         search_string = tok[1:]
