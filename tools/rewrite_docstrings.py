@@ -14,10 +14,10 @@ except (ImportError, ValueError):
 def is_doc_line(s):
     """
     Check if the given line is a doc line.
-    :param s: line to check
-    :type s: str
-    :return: whether the given line is a docstring line or not
-    :rtype:  bool
+    @param s: line to check
+    @type s: str
+    @return: whether the given line is a docstring line or not
+    @rtype:  bool
     """
     return re.match(".*:(param|type|return|rtype|attr|raises).*:", s)
 
@@ -25,12 +25,12 @@ def is_doc_line(s):
 def rewrite_all_docstrings(p, recursive=False, ignore_nonpy=False):
     """
     Rewrite all files in a directory.
-    :param p: path to directory
-    :type p: str
-    :param recursive: whether to descend into subdirectories or not
-    :type recursive: bool
-    :param ignore_nonpy: skip files not ending with .py
-    :type ignore_nonpy: bool
+    @param p: path to directory
+    @type p: str
+    @param recursive: whether to descend into subdirectories or not
+    @type recursive: bool
+    @param ignore_nonpy: skip files not ending with .py
+    @type ignore_nonpy: bool
     """
     for fn in os.listdir(p):
         fp = os.path.join(p, fn)
@@ -47,8 +47,8 @@ def rewrite_all_docstrings(p, recursive=False, ignore_nonpy=False):
 def rewrite_file_docstrings(p):
     """
     Rewrite the docstrings in a file.
-    :param p: path to the file
-    :type p: str
+    @param p: path to the file
+    @type p: str
     """
     with open(p, "r") as fin:
         lines = fin.readlines()
@@ -65,10 +65,10 @@ def rewrite_file_docstrings(p):
 def rewrite_docline(line):
     """
     Rewrite a line in a docstring.
-    :param line: line to rewrite
-    :type line: str
-    :return: the rewriten line
-    :rtype: str
+    @param line: line to rewrite
+    @type line: str
+    @return: the rewriten line
+    @rtype: str
     """
     return line.replace(":", "@", 1)
 

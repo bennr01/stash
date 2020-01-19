@@ -13,12 +13,12 @@ from ..shcommon import K_CC, K_CD, K_HUP, K_HDN, K_LEFT, K_RIGHT, K_CU, K_TAB, K
 class ShBaseUI(object):
     """
     Baseclass for the UI.
-    :param stash: assoziated StaSh instance
-    :type stash : StaSh
-    :param debug: debug flaf
-    :type debug: bool
-    :param debug_terminal: debug flag for the terminal
-    :type debug_terminal: bool
+    @param stash: assoziated StaSh instance
+    @type stash : StaSh
+    @param debug: debug flaf
+    @type debug: bool
+    @param debug_terminal: debug flag for the terminal
+    @type debug_terminal: bool
     """
     def __init__(self, stash, debug=False, debug_terminal=False):
         self.stash = stash
@@ -105,8 +105,8 @@ class ShBaseUI(object):
     def vk_tapped(self, vk):
         """
         Called when a key was pressed
-        :param vk: the pressed key
-        :type vk: int
+        @param vk: the pressed key
+        @type vk: int
         """
         if self.debug:
             self.logger.debug("vk_tapped({vk})".format(vk=vk))
@@ -161,18 +161,18 @@ class ShBaseUI(object):
     def history_present(self, history):
         """
         Present the history.
-        :param history: history to present
-        :type history: stash.system.shhistory.ShHistory
+        @param history: history to present
+        @type history: stash.system.shhistory.ShHistory
         """
         raise NotImplementedError()
     
     def history_selected(self, line, idx):
         """
         This should be called when a history line was selected.
-        :param line: selected line
-        :type line: str
-        :param idx: index of selected line
-        :type idx: int
+        @param line: selected line
+        @type line: str
+        @param idx: index of selected line
+        @type idx: int
         """
         # Save the unfinished line user is typing before showing entries from history
         if self.stash.runtime.history.idx == -1:
@@ -185,10 +185,10 @@ class ShBaseTerminal(object):
     """
     This is the base class for the multiline text used for both in- and output.
     Implementations of the terminal should call the stash.useractionproxy.* methods as appropiate.
-    :param stash: assoziated StaSh instance
-    :type stash: stash.stash.StaSh
-    :param parent: the parent ShBaseUI
-    :type parent: ShBaseUI
+    @param stash: assoziated StaSh instance
+    @type stash: stash.stash.StaSh
+    @param parent: the parent ShBaseUI
+    @type parent: ShBaseUI
     """
     
     def __init__(self, stash, parent):
@@ -273,8 +273,8 @@ class ShBaseTerminal(object):
     def get_wh(self):
         """
         Return the number of columns and rows.
-        :return: number of columns and rows.
-        :rtype: tuple of (int, int)
+        @return: number of columns and rows.
+        @rtype: tuple of (int, int)
         """
         raise NotImplementedError()
 
@@ -285,10 +285,10 @@ class ShTerminalDelegate(object):
     This will be called from the ShUserActionProxy.
     The terminal should call the stash.useractionproxy.* methods instead.
     See http://omz-software.com/pythonista/docs/ios/ui.html#textview
-    :param stash: associated StaSh instance
-    :type stash: stash.StaSh
-    :param terminal: the associated terminal
-    :type terminal: ShBaseTerminal
+    @param stash: associated StaSh instance
+    @type stash: stash.StaSh
+    @param terminal: the associated terminal
+    @type terminal: ShBaseTerminal
     """
     def __init__(self, stash, terminal, debug=False):
         self.stash = stash
@@ -356,12 +356,12 @@ class ShBaseSequentialRenderer(object):
     building texts from the in-memory screen and insert them to the
     terminal.
 
-    :param stash: the StaSh instance
-    :type stash: stash.StaSh
-    :param screen: In memory screen
-    :type screen: stash.screens.ShSequentialScreen
-    :param terminal: The real terminal
-    :type terminal: ShBaseTerminal
+    @param stash: the StaSh instance
+    @type stash: stash.StaSh
+    @param screen: In memory screen
+    @type screen: stash.screens.ShSequentialScreen
+    @param terminal: The real terminal
+    @type terminal: ShBaseTerminal
     """
     FG_COLORS = {
         "default": None,
@@ -385,7 +385,7 @@ class ShBaseSequentialRenderer(object):
     def render(self, no_wait=False):
         """
         Render the screen buffer to the terminal.
-        :param no_wait: Immediately render the screen without delay.
-        :type no_wait: bool
+        @param no_wait: Immediately render the screen without delay.
+        @type no_wait: bool
         """
         raise NotImplementedError()

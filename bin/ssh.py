@@ -36,7 +36,7 @@ except ImportError:
 _SYS_STDOUT = sys.__stdout__
 
 _stash = globals()['_stash']
-""":type : StaSh"""
+"""@type : StaSh"""
 
 try:
     import pyte

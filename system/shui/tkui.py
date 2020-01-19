@@ -77,12 +77,12 @@ class ShUI(ShBaseUI):
     def _history_selected(self, window, items, idx):
         """
         Called when a line was selected from the history popover.
-        :param window: the history popover window
-        :type window: tkinter.Toplevel
-        :param items: list of lines in the history
-        :type items: list of str
-        :param idx: selected index
-        :type idx: int
+        @param window: the history popover window
+        @type window: tkinter.Toplevel
+        @param items: list of lines in the history
+        @type items: list of str
+        @param idx: selected index
+        @type idx: int
         """
         i = idx[0]
         window.destroy()
@@ -92,7 +92,7 @@ class ShUI(ShBaseUI):
     def _popup_rc_menu(self, event):
         """
         Show self._rc_menu as a popup.
-        :param event: tkinter event
+        @param event: tkinter event
         """
         try:
             self._rc_menu.post(event.x_root, event.y_root)
@@ -187,8 +187,8 @@ class ShTerminal(ShBaseTerminal):
     def _on_key_press(self, event):
         """
         Called when a key was pressed.
-        :param event: the event which fired this callback
-        :type event: six.moves.tkinter.Event
+        @param event: the event which fired this callback
+        @type event: six.moves.tkinter.Event
         """
         # get the current position
         cp = self._get_cursor_position()  # TODO: check if this must be calculated before or after the keypress
@@ -253,8 +253,8 @@ class ShTerminal(ShBaseTerminal):
     def _set_text(self, text):
         """
         Set the text.
-        :param text: text to set
-        :type text: str
+        @param text: text to set
+        @type text: str
         """
         self.text = text
         
@@ -262,24 +262,24 @@ class ShTerminal(ShBaseTerminal):
     def _on_focus(self, event):
         """
         Called when the focus was lost.
-        :param event: the event which fired this callback
-        :type event: six.moves.tkinter.Event
+        @param event: the event which fired this callback
+        @type event: six.moves.tkinter.Event
         """
         self.stash.user_action_proxy.tv_responder.textview_did_begin_editing(None)
     
     def _on_focus_loss(self, event):
         """
         Called when the focus was lost.
-        :param event: the event which fired this callback
-        :type event: six.moves.tkinter.Event
+        @param event: the event which fired this callback
+        @type event: six.moves.tkinter.Event
         """
         self.stash.user_action_proxy.tv_responder.textview_did_end_editing(None)
     
     def _get_cursor_position(self):
         """
         Return the cursor position as a delta from the start.
-        :return: the cursor position
-        :rtype: int
+        @return: the cursor position
+        @rtype: int
         """
         v = self._get_absolute_cursor_position()
         return self._abs_cursor_pos_to_rel_pos(v)
@@ -287,8 +287,8 @@ class ShTerminal(ShBaseTerminal):
     def _get_absolute_cursor_position(self):
         """
         Return the actual cursor position as a tuple of (row, column)
-        :return: (row, column) of cursor
-        :rtype: tuple of (int, int)
+        @return: (row, column) of cursor
+        @rtype: tuple of (int, int)
         """
         # source of first line: https://stackoverflow.com/questions/30000368/how-to-get-current-cursor-position-for-text-widget
         raw = self._txt.index(tkinter.INSERT)
@@ -298,10 +298,10 @@ class ShTerminal(ShBaseTerminal):
         """
         Convert an absolute cursor position (tuple of (int, int)) into a index relative to the start (int).
         'lines' are optional and specify a list of lines on which these calculations should be made.
-        :param value: value to convert
-        :type value: tuple of (int, int)
-        :param lines: alternative lines to calculate position from (default: current lines)
-        :type lines: list of str
+        @param value: value to convert
+        @type value: tuple of (int, int)
+        @param lines: alternative lines to calculate position from (default: current lines)
+        @type lines: list of str
         """
         if lines is None:
             # get lines
@@ -321,10 +321,10 @@ class ShTerminal(ShBaseTerminal):
         """
         Convert a cursor position relative to the start (int) to a tuple of (row, column).
         'lines' are optional and specify a list of lines on which these calculations should be made.
-        :param value: value to convert
-        :type value: int
-        :param lines: alternative lines to calculate position from (default: current lines)
-        :type lines: list of str
+        @param value: value to convert
+        @type value: int
+        @param lines: alternative lines to calculate position from (default: current lines)
+        @type lines: list of str
         """
         if lines is None:
             # get lines
@@ -347,10 +347,10 @@ class ShTerminal(ShBaseTerminal):
     def _tk_index_to_tuple(self, value):
         """
         Convert a tkinter index to a tuple of (row, column), starting at 0
-        :param value: value to convert
-        :type value: str
-        :return: the converted value as (row, column), both starting at 0
-        :rtype: tuple of (int, int)
+        @param value: value to convert
+        @type value: str
+        @return: the converted value as (row, column), both starting at 0
+        @rtype: tuple of (int, int)
         """
         splitted = value.split(".")
         row = int(splitted[0]) - 1
@@ -360,10 +360,10 @@ class ShTerminal(ShBaseTerminal):
     def _tuple_to_tk_index(self, value):
         """
         Convert a (row, column) tuple to a tk index.
-        :param value: value to convert
-        :type value: tuple of (int, int)
-        :return: the converted value
-        :rtype: str
+        @param value: value to convert
+        @type value: tuple of (int, int)
+        @return: the converted value
+        @rtype: str
         """
         row, column = value
         return str(row + 1) + "." + str(column)
@@ -371,8 +371,8 @@ class ShTerminal(ShBaseTerminal):
     def _get_selection_range(self):
         """
         Return the index of the currently selected text.
-        :return: start and end index of the currently selected text
-        :rtype: tuple of (int, int)
+        @return: start and end index of the currently selected text
+        @rtype: tuple of (int, int)
         """
         # based on: https://stackoverflow.com/questions/4073468/how-do-i-get-a-selected-string-in-from-a-tkinter-text-box
         # check if text is selected
@@ -404,10 +404,10 @@ class ShTerminal(ShBaseTerminal):
     def _tag_for_char(self, c):
         """
         Return the tag to use for the given character.
-        :param c: character to get tag for
-        :type c: stash.system.shscreens.ShChar
-        :return: the tag used for this char
-        :rtype: str
+        @param c: character to get tag for
+        @type c: stash.system.shscreens.ShChar
+        @return: the tag used for this char
+        @rtype: str
         """
         return self._tag_for_options(
             fg=c.fg,
@@ -430,22 +430,22 @@ class ShTerminal(ShBaseTerminal):
             ):
         """
         Return a tag which described the given options.
-        :param fg: fg color
-        :type fg: str
+        @param fg: fg color
+        @type fg: str
         :bg: bg color
-        :type bg: str
-        :param bold: boldness
-        :type bold: bool
-        :param italics: toogle italics
-        :type italics: bool
-        :param underscore: toogle underscore
-        :type underscore: bool
-        :param striketrough: toogle striketrough
-        :type striketrough: bool
-        :param reverse: no idea
-        :type reverse: bool
-        :return: a tag which identifies this style
-        :rtype: str
+        @type bg: str
+        @param bold: boldness
+        @type bold: bool
+        @param italics: toogle italics
+        @type italics: bool
+        @param underscore: toogle underscore
+        @type underscore: bool
+        @param striketrough: toogle striketrough
+        @type striketrough: bool
+        @param reverse: no idea
+        @type reverse: bool
+        @return: a tag which identifies this style
+        @rtype: str
         """
         s = "{}-{}".format(fg, bg)
         if bold:
@@ -509,10 +509,10 @@ class ShTerminal(ShBaseTerminal):
     def _color_from_tuple(self, value):
         """
         Convert an rgb color tuple to a hex color
-        :param value: value to convert
-        :type value: tuple of (int, int, int)
-        :return: hexcode of color
-        :rtype: str
+        @param value: value to convert
+        @type value: tuple of (int, int, int)
+        @return: hexcode of color
+        @rtype: str
         """
         r, g, b = value
         r = int(255 * r)
@@ -563,10 +563,10 @@ class ShTerminal(ShBaseTerminal):
     def replace_in_range(self, rng, text):
         """
         Replace the text in the given range
-        :param rng: range to replace (start, length)
-        :type rng: tuple of (int, int)
-        :param text: text to insert
-        :type text: iterable of str or ShChar
+        @param rng: range to replace (start, length)
+        @type rng: tuple of (int, int)
+        @param text: text to insert
+        @type text: iterable of str or ShChar
         """
         rstart, length = rng
         start, end = self._rel_cursor_pos_to_abs_pos(rstart), self._rel_cursor_pos_to_abs_pos(rstart + length)
@@ -595,8 +595,8 @@ class ShTerminal(ShBaseTerminal):
     def get_wh(self):
         """
         Return the number of columns and rows.
-        :return: number of columns and rows.
-        :rtype: tuple of (int, int)
+        @return: number of columns and rows.
+        @rtype: tuple of (int, int)
         """
         return (self._txt.config("width")[4], self._txt.config("height")[4])
 

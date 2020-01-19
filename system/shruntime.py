@@ -119,12 +119,12 @@ class ShRuntime(object):
     def write_error_message(self, stream, msg, prefix=None, log=True):
         """
         Write/print an error message to stream.
-        :param stream: file to write to or None
-        :type stream: file or None
-        :param msg: error message
-        :type msg: str
-        :param log: if true, log message
-        :type log: boolean
+        @param stream: file to write to or None
+        @type stream: file or None
+        @param msg: error message
+        @type msg: str
+        @param log: if true, log message
+        @type log: boolean
         """
         if prefix is None:
             prefix = "stash: "
@@ -196,13 +196,13 @@ class ShRuntime(object):
         """
         This is the entry for running shell commands.
 
-        :param input_: Default to ShIO
-        :param final_ins:
-        :param final_outs:
+        @param input_: Default to ShIO
+        @param final_ins:
+        @param final_outs:
         :param final_errs
-        :param add_to_history:
-        :param add_new_inp_line:
-        :param persistent_level:
+        @param add_to_history:
+        @param add_new_inp_line:
+        @param persistent_level:
                     The persistent level dictates how variables from child shell
                     shall be carried over to the parent shell.
                     Possible values are:
@@ -212,10 +212,10 @@ class ShRuntime(object):
                     2 - Semi persistent. Any more future children will have starting
                         variables as the current child's ending variables. (__call__
                         interface is by default in this mode).
-        :param environ:
-        :param cwd:
-        :return:
-        :rtype: ShBaseThread
+        @param environ:
+        @param cwd:
+        @return:
+        @rtype: ShBaseThread
         """
 
         # By default read from the terminal
@@ -628,8 +628,8 @@ class ShRuntime(object):
     def get_prompt(self):
         """
         Get the prompt string. Fill with current working directory if required.
-        :return: the prompt
-        :rtype: str
+        @return: the prompt
+        @rtype: str
         """
         _, current_state = self.get_current_worker_and_state()
 
@@ -657,8 +657,8 @@ class ShRuntime(object):
     def push_to_foreground(self, worker):
         """
         Push the specified worker to the foreground.
-        :param worker: worker to push to the foreground
-        :type worker: ShThread
+        @param worker: worker to push to the foreground
+        @type worker: ShThread
         """
         worker.set_background(False)
         self.stash.mini_buffer.config_runtime_callback(None)
@@ -676,8 +676,8 @@ class ShRuntime(object):
     def get_current_worker_and_state(self):
         """
         Get the current thread and its associated state.
-        :return:
-        :rtype: (ShBaseThread, ShState)
+        @return:
+        @rtype: (ShBaseThread, ShState)
         """
         current_worker = threading.currentThread()
         if isinstance(current_worker, ShBaseThread):

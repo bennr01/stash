@@ -15,7 +15,7 @@ def main(args):
     ns = ap.parse_args(args)
 
     _stash = globals()['_stash']
-    """:type : StaSh"""
+    """@type : StaSh"""
 
     for job_id in ns.job_ids:
         if job_id in _stash.runtime.worker_registry:

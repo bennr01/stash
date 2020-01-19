@@ -17,10 +17,10 @@ RELEASE_TYPE_PRIORITIES = {
 def _parse_version(vs):
     """
     Parse a version string, e.g. '2!3.0.1.rc2.dev3'
-    :param vs: version to parse
-    :type vs: str
-    :return: a dict containing the fragments about the version
-    :rtype: dict
+    @param vs: version to parse
+    @type vs: str
+    @return: a dict containing the fragments about the version
+    @rtype: dict
     """
     # NOTE: the below code may be a bit messy, because it was rewritten multiple times and then repurposed from a sort-function to a parsing-function
     # version scheme (PEP440): [N!]N(.N)*[{a|b|rc}N][.postN][.devN]
@@ -112,10 +112,10 @@ def _parse_version(vs):
 def sort_versions(versionlist):
     """
     Return a list containing the versions in versionlist, starting with the highest version.
-    :param versionlist: list of versions to sort
-    :type versionlist: list of str
-    :return: the sorted list
-    :rtype: list of str
+    @param versionlist: list of versions to sort
+    @type versionlist: list of str
+    @return: the sorted list
+    @rtype: list of str
     """
     return sorted(versionlist, key=lambda s: Version.parse(s) if isinstance(s, str) else s, reverse=True)
 
@@ -155,10 +155,10 @@ class Version(object):
     def parse(cls, s):
         """
         Parse a versionstring and return a Version() of it.
-        :param s: string to parse
-        :type s: str
-        :return: a Version() instance describing the parsed string
-        :rtype: Version
+        @param s: string to parse
+        @type s: str
+        @return: a Version() instance describing the parsed string
+        @rtype: Version
         """
         if isinstance(s, cls):
             # s is already a Version
@@ -187,8 +187,8 @@ class Version(object):
         5. non-dev > dev
         6. dev#
 
-        :return: a value which can be used for comparing this version to another version
-        :rtype: tuple
+        @return: a value which can be used for comparing this version to another version
+        @rtype: tuple
         """
         rpriority = self.RELEASE_TYPE_PRIORITIES.get(self.rtype, 0)
         return (
@@ -282,10 +282,10 @@ class VersionSpecifier(object):
     def parse_requirement(requirement):
         """
         Factory method to create a VersionSpecifier object from a requirement
-        :param requirement: requirement to parse
-        :type requirement: str
-        :return: tuple of (requirement_name, version_specifier, list of extras)
-        :rtype: tuple of (str, VersionSpecifier, list of str)
+        @param requirement: requirement to parse
+        @type requirement: str
+        @return: tuple of (requirement_name, version_specifier, list of extras)
+        @rtype: tuple of (str, VersionSpecifier, list of str)
         """
         if isinstance(requirement, (list, tuple)):
             if len(requirement) == 1:
@@ -337,10 +337,10 @@ class VersionSpecifier(object):
     def match(self, version):
         """
         Check if version is allowed by the version specifiers.
-        :param version: version to check
-        :type version: str
-        :return: whether the version is allowed or not
-        :rtype: boolean
+        @param version: version to check
+        @type version: str
+        @return: whether the version is allowed or not
+        @rtype: boolean
         """
         # return all([op(Version.parse(version), Version.parse(ver)) for op, ver in self.specs])
         matches = True

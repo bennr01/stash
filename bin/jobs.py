@@ -15,7 +15,7 @@ def main(args):
     current_worker = threading.currentThread()
 
     _stash = globals()['_stash']
-    """:type : StaSh"""
+    """@type : StaSh"""
 
     for worker in _stash.get_workers():
         if worker.job_id != current_worker.job_id:

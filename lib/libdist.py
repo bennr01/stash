@@ -20,16 +20,16 @@ if IN_PYTHONISTA:
     def clipboard_get():
         """
         Get the clipboard content.
-        :return: clipboard content
-        :rtype: six.text_type
+        @return: clipboard content
+        @rtype: six.text_type
         """
         return clipboard.get()
     
     def clipboard_set(s):
         """
         Set the clipboard content.
-        :param s: string to set
-        :type s: six.text_type
+        @param s: string to set
+        @type s: six.text_type
         """
         # TODO: non-unicode support
         assert isinstance(s, six.text_type)
@@ -104,8 +104,8 @@ if IN_PYTHONISTA:
         """
         Open a file in another application.
         If possible, let the user decide the application
-        :param path: path to file
-        :type path: str
+        @param path: path to file
+        @type path: str
         """
         console.open_in(path)
     
@@ -113,8 +113,8 @@ if IN_PYTHONISTA:
     def quicklook(path):
         """
         Show a preview of the file.
-        :param path: path to file
-        :type path: str
+        @param path: path to file
+        @type path: str
         """
         console.quicklook(path)
         
@@ -130,16 +130,16 @@ else:
         def clipboard_get():
             """
             Get the clipboard content.
-            :return: clipboard content
-            :rtype: six.text_type
+            @return: clipboard content
+            @rtype: six.text_type
             """
             return pyperclip.paste()
         
         def clipboard_set(s):
             """
             Set the clipboard content.
-            :param s: string to set
-            :type s: six.text_type
+            @param s: string to set
+            @type s: six.text_type
             """
             # TODO: non-unicode support
             assert isinstance(s, six.text_type)
@@ -151,16 +151,16 @@ else:
         def clipboard_get():
             """
             Get the clipboard content.
-            :return: clipboard content
-            :rtype: six.text_type
+            @return: clipboard content
+            @rtype: six.text_type
             """
             return _CLIPBOARD
         
         def clipboard_set(s):
             """
             Set the clipboard content.
-            :param s: string to set
-            :type s: six.text_type
+            @param s: string to set
+            @type s: six.text_type
             """
             global _CLIPBOARD
             assert isinstance(s, six.text_type)
@@ -189,15 +189,15 @@ else:
         """
         Open a file in another application.
         If possible, let the user decide the application
-        :param path: path to file
-        :type path: str
+        @param path: path to file
+        @type path: str
         """
         webbrowser.open(path, new=1)
     
     def quicklook(path):
         """
         Show a preview of the file.
-        :param path: path to file
-        :type path: str
+        @param path: path to file
+        @type path: str
         """
         webbrowser.open(path, new=1)

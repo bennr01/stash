@@ -11,8 +11,8 @@ from .shcommon import ShEventNotFound
 class ShHistory(object):
     """
     This class is responsible for input history.
-    :param stash: the StaSh core
-    :type stash: StaSh
+    @param stash: the StaSh core
+    @type stash: StaSh
     """
 
     ENCODING = "utf-8"
@@ -33,12 +33,12 @@ class ShHistory(object):
     def load(cls, path, stash):
         """
         Load the history from a path.
-        :param path: path to load from.
-        :type path: str
-        :param config: the StaSh core
-        :type config: StaSh
-        :return: the history loaded from the file
-        :rtype: ShHistory
+        @param path: path to load from.
+        @type path: str
+        @param config: the StaSh core
+        @type config: StaSh
+        @return: the history loaded from the file
+        @rtype: ShHistory
         """
         shh = cls(stash)
         try:
@@ -53,10 +53,10 @@ class ShHistory(object):
     def load_old_format(cls, path):
         """
         Load the content of an old-style history.
-        :param path: path to load from
-        :type path: str
-        :return: the lines loaded from the file
-        :rtype: list of str
+        @param path: path to load from
+        @type path: str
+        @return: the lines loaded from the file
+        @rtype: list of str
         """
         with open(path, "r", encoding=cls.ENCODING) as fin:
             lines = [line.strip() for line in fin.readlines()]
@@ -65,8 +65,8 @@ class ShHistory(object):
     def save(self, path):
         """
         Save the history to a path.
-        :param path: path to save to.
-        :type path: str
+        @param path: path to save to.
+        @type path: str
         """
         with open(path, "w", encoding=self.ENCODING) as fout:
             s = json.dumps(self._histories)
@@ -75,8 +75,8 @@ class ShHistory(object):
     def clear(self, target=None):
         """
         Clear the history
-        :param target: history to clear or None for current
-        :type history: str or None
+        @param target: history to clear or None for current
+        @type history: str or None
         """
         if target is None:
             target = self._current
@@ -92,18 +92,18 @@ class ShHistory(object):
     def swap(self, target):
         """
         Swap the history
-        :param target: identifier to get the history for
-        :type target: str or None
+        @param target: identifier to get the history for
+        @type target: str or None
         """
         self._current = target
 
     def add(self, line, always=False):
         """
         Add a line to the history.
-        :param line: line to add to history
-        :type line: str
-        :param always: always add this line, regardless of config
-        :type always: bool
+        @param line: line to add to history
+        @type line: str
+        @param always: always add this line, regardless of config
+        @type always: bool
         """
         if self._current not in self._histories:
             self._histories[self._current] = []
@@ -128,8 +128,8 @@ class ShHistory(object):
     def getlist(self):
         """
         Return a list of the current history.
-        :return: list of current history entries
-        :rtype: list of str
+        @return: list of current history entries
+        @rtype: list of str
         """
         if self._current not in self._histories:
             self._histories[self._current] = []
@@ -138,10 +138,10 @@ class ShHistory(object):
     def search(self, tok):
         """
         Search the history.
-        :param tok:
-        :type tok:
-        :return: last entry in history matching the search
-        :rtype: str
+        @param tok:
+        @type tok:
+        @return: last entry in history matching the search
+        @rtype: str
         """
         history = self.getlist()
         search_string = tok[1:]

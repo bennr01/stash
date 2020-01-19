@@ -23,8 +23,8 @@ ON_TRAVIS = "TRAVIS" in os.environ
 def network_is_available():
     """
     Check whether the network is available.
-    :return: whether the network is available.
-    :rtype: bool
+    @return: whether the network is available.
+    @rtype: bool
     """
     # to be sure, test multiple sites in case one of them is offline
     test_sites = [
@@ -48,10 +48,10 @@ def requires_network(f):
     """
     Decorator for specifying that a test needs a network connection.
     If no network connection is available, skip test.
-    :param f: test function
-    :type f: callable
-    :return: decorated function
-    :rtype: callable
+    @param f: test function
+    @type f: callable
+    @return: decorated function
+    @rtype: callable
     """
     network_unavailable = (not network_is_available())
     return unittest.skipIf(network_unavailable, "No network connection available.")(f)
@@ -60,10 +60,10 @@ def requires_network(f):
 def expected_failure_on_py3(f):
     """
     Decorator for specifying that a test will probably fail on py3.
-    :param f: test function
-    :type f: callable
-    :return: decorated function
-    :rtype: callable
+    @param f: test function
+    @type f: callable
+    @return: decorated function
+    @rtype: callable
     """
     if PY3:
         return unittest.expectedFailure(f)
@@ -152,12 +152,12 @@ class StashTestCase(unittest.TestCase):
     def run_command(self, command, exitcode=None):
         """
         Run a command and return its output.
-        :param command: command to run
-        :type command: str
-        :param exitcode: expected exitcode, None to ignore
-        :type exitcode: int or None
-        :return: output of the command
-        :rtype: str
+        @param command: command to run
+        @type command: str
+        @param exitcode: expected exitcode, None to ignore
+        @type exitcode: int or None
+        @return: output of the command
+        @rtype: str
         """
         # for debug purposes, locate script
         try:

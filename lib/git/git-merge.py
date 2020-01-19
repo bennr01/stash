@@ -21,10 +21,10 @@ from git.gitutils import (
 def _merge_entries(path, trees):
     """Merge the entries of two trees.
 
-    :param path: A path to prepend to all tree entry names.
-    :param tree1: The first Tree object to iterate, or None.
-    :param tree2: The second Tree object to iterate, or None.
-    :return: A list of pairs of TreeEntry objects for each pair of entries in
+    @param path: A path to prepend to all tree entry names.
+    @param tree1: The first Tree object to iterate, or None.
+    @param tree2: The second Tree object to iterate, or None.
+    @return: A list of pairs of TreeEntry objects for each pair of entries in
         the trees. If an entry exists in one tree but not the other, the other
         entry will have all attributes set to None. If neither entry's path is
         None, they are guaranteed to match.
@@ -67,10 +67,10 @@ def walk_trees(store, tree_ids, prune_identical=False):
 
     Iteration is depth-first pre-order, as in e.g. os.walk.
 
-    :param store: An ObjectStore for looking up objects.
-    :param trees: iterable of SHAs for N trees
-    :param prune_identical: If True, identical subtrees will not be walked.
-    :return: Iterator over tuple contsining N TreeEntry objects for each of entries
+    @param store: An ObjectStore for looking up objects.
+    @param trees: iterable of SHAs for N trees
+    @param prune_identical: If True, identical subtrees will not be walked.
+    @return: Iterator over tuple contsining N TreeEntry objects for each of entries
         in the trees and their subtrees recursively. If an entry exists in one
         tree but not the other, the other entry will have all attributes set
         to None. If neither entry's path is None, they are guaranteed to

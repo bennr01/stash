@@ -276,10 +276,10 @@ class StaSh(object):
     def write_message(self, s, error=False, prefix="stash: "):
         """
         Write a message to the output.
-        :param s: message to write
-        :type w: str
-        :param error: whether this is an error message
-        :type error: bool
+        @param s: message to write
+        @type w: str
+        @param error: whether this is an error message
+        @type error: bool
         """
         s = '%s%s\n' % (prefix, s)
         if error:
@@ -326,8 +326,8 @@ class StaSh(object):
     def get_workers(self):
         """
         Return a list of all workers..
-        :return: a list of all workers
-        :rtype: list of [stash.system.shtreads.BaseThread]
+        @return: a list of all workers
+        @rtype: list of [stash.system.shtreads.BaseThread]
         """
         return [worker for worker in self.runtime.worker_registry]
 
@@ -337,10 +337,10 @@ class StaSh(object):
         """
         Style the given string with ASCII escapes.
 
-        :param str s: String to decorate
-        :param dict style: A dictionary of styles
-        :param bool always: If true, style will be applied even for pipes.
-        :return:
+        @param str s: String to decorate
+        @param dict style: A dictionary of styles
+        @param bool always: If true, style will be applied even for pipes.
+        @return:
         """
         # No color for pipes, files and Pythonista console
         if not self.enable_styles or (not always and (isinstance(sys.stdout,

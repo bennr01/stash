@@ -40,7 +40,7 @@ class ShVk(ui.View):
     """
     The virtual keyboard container, which implements a swipe cursor positioning gesture
 
-    :type stash : StaSh
+    @type stash : StaSh
     """
 
     def __init__(self, stash, name='vks', flex='wh'):
@@ -278,8 +278,8 @@ class ShUI(ShBaseUI, ui.View):
         """
         This is needed to make sure the extra key row is not covered by the
         keyboard frame when it pops up.
-        :param frame:
-        :return:
+        @param frame:
+        @return:
         """
         if self.on_screen:
             if frame[3] > 0:  # when keyboard appears
@@ -323,8 +323,8 @@ class ShUI(ShBaseUI, ui.View):
     def history_present(self, history):
         """
         Present a history popover.
-        :param history: history to present
-        :type history: ShHistory
+        @param history: history to present
+        @type history: ShHistory
         """
         listsource = ui.ListDataSource(history.getlist())
         listsource.action = self.history_popover_tapped
@@ -341,8 +341,8 @@ class ShUI(ShBaseUI, ui.View):
     def history_popover_tapped(self, sender):
         """
         Called when a row in the history popover was tapped.
-        :param sender: sender of the event
-        :type sender: ui.TableView
+        @param sender: sender of the event
+        @type sender: ui.TableView
         """
         if sender.selected_row >= 0:
             self.history_selected(sender.items[sender.selected_row], sender.selected_row)
@@ -350,8 +350,8 @@ class ShUI(ShBaseUI, ui.View):
     def _vk_tapped(self, sender):
         """
         Called when a key was tapped
-        :param sender: sender of the event
-        :type sender: ui.Button
+        @param sender: sender of the event
+        @type sender: ui.Button
         """
         # resolve key
         mapping = [
@@ -722,7 +722,7 @@ class ShTerminal(ShBaseTerminal):
     def size(self, value):
         """
         Set the width and height of the view
-        :param value: A tuple of (width, height)
+        @param value: A tuple of (width, height)
         """
         self.tvo.setSize_(value)
 
@@ -789,8 +789,8 @@ class ShSequentialRenderer(ShBaseSequentialRenderer):
     building texts from the in-memory screen and insert them to the
     UI terminal.
 
-    :param ShSequentialScreen screen: In memory screen
-    :param ShTerminal terminal: The real UI terminal
+    @param ShSequentialScreen screen: In memory screen
+    @param ShTerminal terminal: The real UI terminal
     """
     FG_COLORS = {
         'black': BlackColor,
@@ -855,8 +855,8 @@ class ShSequentialRenderer(ShBaseSequentialRenderer):
         Build attributed text in a more efficient way than char by char.
         It groups characters with the same attributes and apply the attributes
         to them at once.
-        :param [ShChar] chars: A list of ShChar upon which the attributed text is built.
-        :rtype: object
+        @param [ShChar] chars: A list of ShChar upon which the attributed text is built.
+        @rtype: object
         """
         # Initialize a string with default attributes
         attributed_text = NSMutableAttributedString.alloc().initWithString_attributes_(
@@ -885,7 +885,7 @@ class ShSequentialRenderer(ShBaseSequentialRenderer):
         """
         Render the screen buffer to the UITextView. Normally the rendering process
         is delayed to throttle the total attempts of rendering.
-        :param bool no_wait: Immediately render the screen without delay.
+        @param bool no_wait: Immediately render the screen without delay.
         """
         # The last_rendered_time is useful to ensure that the first rendering
         # is not delayed.

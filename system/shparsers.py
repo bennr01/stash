@@ -346,7 +346,7 @@ class ShExpander(object):
     """
     Expand variables, wildcards, escapes, quotes etc. based on parsed results.
 
-    :type stash: StaSh
+    @type stash: StaSh
     """
 
     def __init__(self, stash, debug=False):
@@ -724,8 +724,8 @@ class ShCompleter(object):
         Attempt to auto-completes the given line. Returns the completed
         line and a list of possibilities.
 
-        :param str line: The line to complete
-        :rtype: (str, [str])
+        @param str line: The line to complete
+        @rtype: (str, [str])
         """
         _, current_state = self.stash.runtime.get_current_worker_and_state()
 

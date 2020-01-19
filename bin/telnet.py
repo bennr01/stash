@@ -16,7 +16,7 @@ from stash.system.shcommon import K_CC, K_CD, K_HUP, K_HDN, K_CU, K_TAB, K_HIST,
 _SYS_STDOUT = sys.__stdout__
 
 _stash = globals()['_stash']
-""":type : StaSh"""
+"""@type : StaSh"""
 
 try:
     import pyte
@@ -63,8 +63,8 @@ class StashTelnet(object):
     def feed_screen(self, data):
         """
         Feed data to the screen
-        :param data: data to feed
-        :type data: str
+        @param data: data to feed
+        @type data: str
         """
         if data:
             data = data.decode('utf-8', errors='ignore')

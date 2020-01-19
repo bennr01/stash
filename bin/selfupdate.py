@@ -28,8 +28,8 @@ class UpdateError(Exception):
 def get_remote_version(owner, branch):
     """
     Get the version string for the given branch from the remote repo
-    :param branch:
-    :return:
+    @param branch:
+    @return:
     """
     import ast
 

@@ -18,14 +18,14 @@ except (ImportError, ValueError):
 def apply_to_file(fp, sp, in_place=False):
     """
     Apply the style to a file.
-    :param fp: path to file
-    :type fp: str
-    :param sp: path to style
-    :type sp: str
-    :param in_place: format code in-place
-    :type in_place: bool
-    :return: the reformated code
-    :rtype: str or None
+    @param fp: path to file
+    @type fp: str
+    @param sp: path to style
+    @type sp: str
+    @param in_place: format code in-place
+    @type in_place: bool
+    @return: the reformated code
+    @rtype: str or None
     """
     rc, encoidng, changed = FormatFile(fp, style_config=sp, verify=True, in_place=in_place)
     return rc
@@ -34,18 +34,18 @@ def apply_to_file(fp, sp, in_place=False):
 def apply_to_dir(path, style, recursive=False, in_place=False, verbose=False, pyonly=True):
     """
     Apply the style to all files in a directory.
-    :param path: path to directory
-    :type path: str
-    :param style: path to style file
-    :type style: str
-    :param recursive: also descend into subdirectories
-    :type recursive: bool
-    :param in_place: apply the changes directly to the file
-    :type in_place: bool
-    :param verbose: print additional information
-    :type verbose: bool
-    :param pyonly: only apply to .py files
-    :type pyonly: bool
+    @param path: path to directory
+    @type path: str
+    @param style: path to style file
+    @type style: str
+    @param recursive: also descend into subdirectories
+    @type recursive: bool
+    @param in_place: apply the changes directly to the file
+    @type in_place: bool
+    @param verbose: print additional information
+    @type verbose: bool
+    @param pyonly: only apply to .py files
+    @type pyonly: bool
     """
     if verbose:
         print("Applying style to directory '{}'...".format(path))

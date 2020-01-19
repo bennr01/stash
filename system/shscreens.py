@@ -36,14 +36,14 @@ _Char = namedtuple("_Char",
 class ShChar(_Char):
     """
     Class of attributed character.
-    :param str data: The actual character
-    :param str fg: The foreground color
-    :param str bg: The background color
-    :param bool bold: Bold font
-    :param bool italics: Italics font
-    :param bool underscore: Underline the character
-    :param bool reverse: NOT Implemented
-    :param bool strikethrough: Strike through the character
+    @param str data: The actual character
+    @param str fg: The foreground color
+    @param str bg: The background color
+    @param bool bold: Bold font
+    @param bool italics: Italics font
+    @param bool underscore: Underline the character
+    @param bool reverse: NOT Implemented
+    @param bool strikethrough: Strike through the character
     """
     __slots__ = ()
 
@@ -65,12 +65,12 @@ class ShChar(_Char):
     def same_style(char1, char2):
         """
         Check if both chars have the same style
-        :param char1: first char to compare
-        :type char1: ShChar
-        :param char2: second char to compare
-        :type char2: ShChar
-        :return: whether both chars have the same style or not
-        :rtype: bool
+        @param char1: first char to compare
+        @type char1: ShChar
+        @param char2: second char to compare
+        @type char2: ShChar
+        @return: whether both chars have the same style or not
+        @rtype: bool
         """
         return char1.fg == char2.fg \
                and char1.bg == char2.bg \
@@ -94,7 +94,7 @@ class ShSequentialScreen(object):
     The sequential type in-memory screen. Running scripts can only
     add characters at the end of the screen buffer, no backspace or
     cursor movement is possible. Hence it is sequential.
-    :param int nlines_max: The maximum number of lines to be stored.
+    @param int nlines_max: The maximum number of lines to be stored.
     """
 
     def __init__(self, stash, nlines_max=100, debug=False):
@@ -143,7 +143,7 @@ class ShSequentialScreen(object):
     def cursor_x(self):
         """
         Note this method returns both bounds of cursor as a tuple.
-        :rtype: (int, int)
+        @rtype: (int, int)
         """
         return self.cursor_xs, self.cursor_xe
 
@@ -151,22 +151,22 @@ class ShSequentialScreen(object):
     def cursor_x(self, value):
         """
         This method sets both bounds of the cursor to the same value.
-        :param int value: New value for both bounds of the cursor
-        :return:
+        @param int value: New value for both bounds of the cursor
+        @return:
         """
         self.cursor_xs = self.cursor_xe = value
 
     @property
     def text(self):
         """
-        :rtype: str
+        @rtype: str
         """
         return ''.join(c.data for c in self._buffer)
 
     @property
     def text_length(self):
         """
-        :rtype: int
+        @rtype: int
         """
         return len(self._buffer)
 
@@ -176,7 +176,7 @@ class ShSequentialScreen(object):
         Trailing characters that need to be re-rendered (this is not the same
         as modifiable chars).
         Note this return a list of ShChar not a String.
-        :rtype: [ShChar]
+        @rtype: [ShChar]
         """
         _, rbound = self.get_bounds()
         return [self._buffer[x] for x in xrange(rbound, len(self._buffer))]
@@ -186,7 +186,7 @@ class ShSequentialScreen(object):
         """
         The location where characters start to be modifiable by users. The value
         is relative to the beginning of screen buffer.
-        :rtype: int
+        @rtype: int
         """
         # The position is either the x_drawend or last LF location plus one,
         # whichever is larger.
@@ -201,7 +201,7 @@ class ShSequentialScreen(object):
         """
         The range of modifiable characters. Values are relative to the
         beginning of screen buffer.
-        :rtype: (int, int)
+        @rtype: (int, int)
         """
         return self.x_modifiable, self.text_length
 
@@ -209,7 +209,7 @@ class ShSequentialScreen(object):
     def modifiable_string(self):
         """
         A string represents the characters that are in the modifiable range.
-        :rtype: str
+        @rtype: str
         """
         return ''.join(self._buffer[idx].data for idx in xrange(*self.modifiable_range))
 
@@ -218,7 +218,7 @@ class ShSequentialScreen(object):
         """
         Set the modifiable_string to the given string using default Char properties.
         This method is only called by UI delegate side, i.e. NOT running scripts.
-        :param str s: A new value for modifiable_string.
+        @param str s: A new value for modifiable_string.
         """
         self.replace_in_range(self.modifiable_range, s)
 
@@ -226,7 +226,7 @@ class ShSequentialScreen(object):
     def acquire_lock(self, blocking=True):
         """
         Lock the screen for modification so that it will not be corrupted.
-        :param blocking: By default the method blocks until a lock is acquired.
+        @param blocking: By default the method blocks until a lock is acquired.
         """
         locked = self.lock.acquire(blocking)
         try:
@@ -240,8 +240,8 @@ class ShSequentialScreen(object):
         """
         This method is used for when operations like replacing, insertion, deletion
         are needed in the middle of the character buffer.
-        :param n:
-        :return:
+        @param n:
+        @return:
         """
         self._buffer.rotate(n)
         try:
@@ -254,7 +254,7 @@ class ShSequentialScreen(object):
         Get the left and right intact bounds of the screen buffer.
         The bounds could become negative if entire screen is flushed out before
         any rendering. In this case, the bounds need to be adjusted accordingly.
-        :rtype (int, int):
+        @rtype (int, int):
         """
         rbound = self.intact_right_bound if self.intact_right_bound >= 0 else 0
         lbound = self.intact_left_bound if rbound > 0 else 0
@@ -273,11 +273,11 @@ class ShSequentialScreen(object):
         Replace the buffer content in the given range. This method should
         ONLY be called from the UI delegation side, i.e. NOT running
         scripts.
-        :param (int, int) rng: Range of buffer to be replaced
-        :param str s: String to be inserted (to be converted to Char with default properties).
-        :param bool relative_to_x_modifiable: If True, the range is relative to the x_modifiable
-        :param bool set_drawend: If True, the x_drawend will be set to the end of this replacement.
-        :return:
+        @param (int, int) rng: Range of buffer to be replaced
+        @param str s: String to be inserted (to be converted to Char with default properties).
+        @param bool relative_to_x_modifiable: If True, the range is relative to the x_modifiable
+        @param bool set_drawend: If True, the x_drawend will be set to the end of this replacement.
+        @return:
         """
         if rng is None:
             rng = (len(self._buffer), len(self._buffer))
@@ -315,8 +315,8 @@ class ShSequentialScreen(object):
     def _pop_chars(self, n=1):
         """
         Remove number of given characters form the right END of the buffer
-        :param n:
-        :return:
+        @param n:
+        @return:
         """
         for _ in xrange(n):
             self._buffer.pop()
@@ -379,7 +379,7 @@ class ShSequentialScreen(object):
         """
         Add given char to the right end of the buffer and update the last draw
         location. This method should ONLY be called by ShStream.
-        :param str c: A new character to draw
+        @param str c: A new character to draw
         """
 
         if self.cursor_xs == self.text_length:  # cursor is at the end
@@ -434,7 +434,7 @@ class ShSequentialScreen(object):
     def delete_characters(self, count=0):
         """
         Delete n characters from cursor including cursor within the current line.
-        :param count: If count is 0, delete till the next newline.
+        @param count: If count is 0, delete till the next newline.
         """
         if self.cursor_xs == self.text_length or self._buffer[self.cursor_xs] == '\n':
             return
@@ -453,8 +453,8 @@ class ShSequentialScreen(object):
     def erase_in_line(self, mode=0):
         """
         Erase a line with different mode. Note the newline character is NOT deleted.
-        :param mode:
-        :return:
+        @param mode:
+        @return:
         """
         # Calculate the range for erase
         if mode == 0:  # erase from cursor to end of line, including cursor
@@ -494,7 +494,7 @@ class ShSequentialScreen(object):
     def select_graphic_rendition(self, *attrs):
         """
         Act on text style ASCII escapes
-        :param [ShChar] attrs: List of characters and their attributes
+        @param [ShChar] attrs: List of characters and their attributes
         """
         replace = {}
 

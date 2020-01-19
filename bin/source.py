@@ -24,7 +24,7 @@ def main(args):
     ns = ap.parse_args(args)
 
     _stash = globals()['_stash']
-    """:type : StaSh"""
+    """@type : StaSh"""
 
     _, current_state = _stash.runtime.get_current_worker_and_state()
 

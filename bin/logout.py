@@ -10,8 +10,8 @@ _stash = globals()["_stash"]
 def logout(n):
     """
     Quit StaSh
-    :param n: exitcode for the shell (not implemented)
-    :type n: int
+    @param n: exitcode for the shell (not implemented)
+    @type n: int
     """
     import threading
     t = threading.Thread(target=_stash.close, name="close thread")

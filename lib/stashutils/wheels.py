@@ -129,13 +129,13 @@ class BaseHandler(object):
     def copytree(self, packagepath, src, dest, remove=False):
         """
         Copies a package directory tree.
-        :param packagepath: relative path of the (sub-)package, e.g. 'package/subpackage/'
-        :type packagepath: str
-        :param src: path to the actual source of the root package
-        :type src: str
-        :param dest: path to copy to
-        :type dest: str
-        :return: the path to which the directories have been copied.
+        @param packagepath: relative path of the (sub-)package, e.g. 'package/subpackage/'
+        @type packagepath: str
+        @param src: path to the actual source of the root package
+        @type src: str
+        @param dest: path to copy to
+        @type dest: str
+        @return: the path to which the directories have been copied.
         :trype: str
         """
         if self.verbose:

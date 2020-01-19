@@ -26,7 +26,7 @@ class ShMiniBuffer(object):
 
     def __init__(self, stash, main_screen, debug=False):
         self.stash = stash
-        """:type : StaSh"""
+        """@type : StaSh"""
 
         self.main_screen = main_screen
         self.debug = debug
@@ -45,7 +45,7 @@ class ShMiniBuffer(object):
         The index where chars start to be modifiable. Modifiable chars are
         those input text that can still be edited by users. Any characters
         before a linebreak is not modifiable.
-        :rtype: int
+        @rtype: int
         """
         idx = self.chars.rfind('\n')
         return idx + 1 if idx != -1 else 0
@@ -53,14 +53,14 @@ class ShMiniBuffer(object):
     @property
     def modifiable_string(self):
         """
-        :rtype: str: modifiable characters
+        @rtype: str: modifiable characters
         """
         return self.chars[self.x_modifiable:]
 
     @modifiable_string.setter
     def modifiable_string(self, value):
         """
-        :param str value: New value for the modifiable chars
+        @param str value: New value for the modifiable chars
         """
         self.chars = self.chars[:self.x_modifiable] + value
 
@@ -69,9 +69,9 @@ class ShMiniBuffer(object):
         Directly called by a TextView delegate to replace existing chars
         in given range with the given new chars.
 
-        :param (int, int) | None | str rng: the range of selected chars
-        :param str replacement: new chars
-        :return:
+        @param (int, int) | None | str rng: the range of selected chars
+        @param str replacement: new chars
+        @return:
         """
 
         if rng is None or rng == self.RANGE_MODIFIABLE_CHARS:
@@ -202,8 +202,8 @@ class ShMiniBuffer(object):
     def set_cursor(self, offset, whence=0):
         """
         Set cursor within the modifiable range.
-        :param offset:
-        :param whence:
+        @param offset:
+        @param whence:
         """
         # Lock the main_screen for modification
         with self.main_screen.acquire_lock():
@@ -263,8 +263,8 @@ class ShMiniBuffer(object):
         Convert the incoming range (by user) to values relative to the
         input buffer text. Also enforce the modifiable bound.
 
-        :param (int, int) rng: range of selected text
-        :return: (int, int): Adjusted range
+        @param (int, int) rng: range of selected text
+        @return: (int, int): Adjusted range
         """
         terminal = self.stash.terminal
         tv_text = terminal.text  # existing text from the terminal
@@ -365,7 +365,7 @@ class ShStream(object):
         """Consumes a single string character and advance the state as
         necessary.
 
-        :param str char: a character to consume.
+        @param str char: a character to consume.
         """
         try:
             self.consume_handlers[self.state](char)
@@ -375,7 +375,7 @@ class ShStream(object):
     def feed(self, chars, render_it=True, no_wait=False):
         """Consumes a string and advance the state as necessary.
 
-        :param str chars: a string to feed from.
+        @param str chars: a string to feed from.
         """
         # To avoid the \xc2 deadlock from bytes string
         if not isinstance(chars, six.text_type):
@@ -394,8 +394,8 @@ class ShStream(object):
            If any of the attached listeners throws an exception, the
            subsequent callbacks are be aborted.
 
-        :param str event: event to dispatch.
-        :param list args: arguments to pass to event handlers.
+        @param str event: event to dispatch.
+        @param list args: arguments to pass to event handlers.
         """
 
         # noinspection PyCallingNonCallable

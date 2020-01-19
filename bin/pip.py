@@ -85,10 +85,10 @@ class PackageAlreadyInstalled(PipError):
 class PackageBlacklisted(PipError):
     """
     Error raised when a package is fataly blacklisted
-    :param pkg_name: name of blacklisted package
-    :type pkg_name: str
-    :param reason: reason for blacklisting
-    :type reason: str
+    @param pkg_name: name of blacklisted package
+    @type pkg_name: str
+    @param reason: reason for blacklisting
+    @type reason: str
     """
     def __init__(self, pkg_name, reason):
         s = "Package '{}' blacklisted. Reason: {}".format(pkg_name, reason)
@@ -217,7 +217,7 @@ class SetuptoolsStub(types.ModuleType):
 def fake_module(new_module):
     """
     Created dummy empty modules
-    :param new_module: The name of a module to be faked
+    @param new_module: The name of a module to be faked
     """
     module_names = []
     for name in new_module.split('.'):
@@ -413,8 +413,8 @@ class PackageConfigHandler(object):
     def add_module(self, pkg_info):
         """
 
-        :param pkg_info: A dict that has name, url, version, summary
-        :return:
+        @param pkg_info: A dict that has name, url, version, summary
+        @return:
         """
         if not self.parser.has_section(pkg_info['name']):
             self.parser.add_section(pkg_info['name'])
@@ -518,14 +518,14 @@ class ArchiveFileInstaller(object):
     def run(self, pkg_name, archive_filename, extras=[]):
         """
         Main method for Installer to do its job.
-        :param pkg_name: name of package
-        :type pkg_name: str
-        :param archive_filename: path to archive
-        :type param: str
-        :param extras: extras to install
-        :type extras: list of str
-        :return: tuple of (files installed, dependencies)
-        :rtype: tuple of (list of str, list of str)
+        @param pkg_name: name of package
+        @type pkg_name: str
+        @param archive_filename: path to archive
+        @type param: str
+        @param extras: extras to install
+        @type extras: list of str
+        @return: tuple of (files installed, dependencies)
+        @rtype: tuple of (list of str, list of str)
         """
 
         extracted_folder = self._unzip(pkg_name, archive_filename)
@@ -604,12 +604,12 @@ class ArchiveFileInstaller(object):
     def _run_setup_file(self, filename, extras=[]):
         """
         Transform and Run AST of the setup file
-        :param filename: file to run
-        :type filename: str
-        :param extras: extras to install
-        :type extras: list of str
-        :return: tuple of (files installed, dependencies)
-        :rtype: tuple of (list of str, list of str)
+        @param filename: file to run
+        @type filename: str
+        @param extras: extras to install
+        @type extras: list of str
+        @return: tuple of (files installed, dependencies)
+        @rtype: tuple of (list of str, list of str)
         """
 
         try:
@@ -979,10 +979,10 @@ class PyPIRepository(PackageRepository):
             - element 1 is the reason
             - element 2 is True if the install should fail due to this
             - element 3 is an optional alternative package to use instead.
-        :param pkg_name: name of package to check
-        :type pkg_name: str
-        :return: a tuple of (blacklisted, reason, fatal, alt).
-        :rtype: (bool, str, bool, str or None)
+        @param pkg_name: name of package to check
+        @type pkg_name: str
+        @return: a tuple of (blacklisted, reason, fatal, alt).
+        @rtype: (bool, str, bool, str or None)
         """
         if (BLACKLIST_PATH is None) or (not os.path.exists(BLACKLIST_PATH)):
             # blacklist not available
@@ -1189,14 +1189,14 @@ class PyPIRepository(PackageRepository):
     def _determin_hit(self, pkg_data, ver_spec, flags=None):
         """
         Find a release for a package matching a specified version.
-        :param pkg_data: the package information
-        :type pkg_data: dict
-        :param ver_spec: the version specification
-        :type ver_spec: VersionSpecifier
-        :param flags: (distribution) options
-        :type flags: int or None
-        :return: a version matching the specified version
-        :rtype: str
+        @param pkg_data: the package information
+        @type pkg_data: dict
+        @param ver_spec: the version specification
+        @type ver_spec: VersionSpecifier
+        @param flags: (distribution) options
+        @type flags: int or None
+        @return: a version matching the specified version
+        @rtype: str
         """
         pkg_name = pkg_data['info']['name']
         latest = self._package_latest_release(pkg_data)
@@ -1221,12 +1221,12 @@ class PyPIRepository(PackageRepository):
     def _release_matches_py_version(self, pkg_data, release):
         """
         Check if a release is compatible with the python version.
-        :param pkg_data: package information
-        :type pkg_data: dict
-        :param release: the release to check
-        :type release: str
-        :return: whether the releases matches the python version
-        :rtype: boolean
+        @param pkg_data: package information
+        @type pkg_data: dict
+        @param release: the release to check
+        @type release: str
+        @return: whether the releases matches the python version
+        @rtype: boolean
         """
         had_v = False
         has_source = False
@@ -1275,14 +1275,14 @@ class PyPIRepository(PackageRepository):
     def _dist_flags_allows_release(self, flags, pkg_data, release):
         """
         Check if a release is allowed by the distribution flags.
-        :param flags: the (distribution) flags
-        :type flags: int
-        :param pkg_data: package information
-        :type pkg_data: dict
-        :param release: the release to check
-        :type release: str
-        :return: whether the flags allow this release or not
-        :rtype: boolean
+        @param flags: the (distribution) flags
+        @type flags: int
+        @param pkg_data: package information
+        @type pkg_data: dict
+        @param release: the release to check
+        @type release: str
+        @return: whether the flags allow this release or not
+        @rtype: boolean
         """
         downloads = self._package_downloads(pkg_data, release)
         for download in downloads:
@@ -1392,15 +1392,15 @@ class LocalRepository(PackageRepository):
 def get_repository(pkg_name, site_packages=SITE_PACKAGES_FOLDER, verbose=False):
     """
     The corresponding repository based on the given package name.
-    :param pkg_name: It can be one of the four following options:
+    @param pkg_name: It can be one of the four following options:
     1. An URL pointing to an archive file
     2. Path to a local archive file
     3. A owner/repo pair pointing to a GitHub repo
     4. A name representing a PyPI package.
-    :param site_packages: folder containing the site-packages
-    :type site_packages: str
-    :param verbose: enable additional output
-    :type verbose: bool
+    @param site_packages: folder containing the site-packages
+    @type site_packages: str
+    @param verbose: enable additional output
+    @type verbose: bool
     """
 
     if pkg_name.startswith('http://') \

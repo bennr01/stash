@@ -31,7 +31,7 @@ class ShUserActionProxy(object):
     tap, etc. A centralized object makes it easier to substitute default
     handlers by user-defined functions in command script, e.g. ssh.
 
-    :param StaSh stash:
+    @param StaSh stash:
     """
 
     def __init__(self, stash):

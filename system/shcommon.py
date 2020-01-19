@@ -170,9 +170,9 @@ _OS_ENVIRON = os.environ
 def is_binary_file(filename, nbytes=1024):
     """
     An approximate way to tell whether a file is binary.
-    :param str filename: The name of the file to be tested.
-    :param int nbytes: number of bytes to read for test
-    :return:
+    @param str filename: The name of the file to be tested.
+    @param int nbytes: number of bytes to read for test
+    @return:
     """
     with open(filename, 'rb') as ins:
         for c in ins.read(nbytes):

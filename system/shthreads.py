@@ -80,7 +80,7 @@ class ShState(object):
     def persist_child(self, child_state, persistent_level=0):
         """
         This is used to carry child shell state to its parent shell
-        :param ShState child_state: Child state
+        @param ShState child_state: Child state
         """
         if persistent_level == 0:
             # restore old state
@@ -111,8 +111,8 @@ class ShState(object):
         """
         Create new state from parent state. Parent's enclosing environ are merged as
         part of child's environ
-        :param ShState parent_state: Parent state
-        :return:
+        @param ShState parent_state: Parent state
+        @return:
         """
 
         if parent_state.enclosing_aliases:
@@ -194,7 +194,7 @@ class ShWorkerRegistry(object):
     def purge(self):
         """
         Kill all registered thread and clear the entire registry
-        :return:
+        @return:
         """
         for worker in self.registry.values():
             worker.kill()

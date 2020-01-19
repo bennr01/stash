@@ -12,8 +12,8 @@ ON_TRAVIS = "TRAVIS" in os.environ
 def get_platform():
     """
     Return a string describing the UI implementation to use.
-    :return: platform identifier
-    :rtype: str
+    @return: platform identifier
+    @rtype: str
     """
     # platform specific UIs
     if IN_PYTHONISTA:
@@ -41,10 +41,10 @@ def get_platform():
 def get_ui_implementation(platform=None):
     """
     Return the classes implementing the UI for the platform.
-    :param platform: identifier describing the platform to get the UI implementation for. Defaults to None, in which case it tries to find the best UI.
-    :type platform: str
-    :return: (ShUI, ShSequentialRenderer)
-    :rtype: tuple of (stash.shui.base.ShBaseUI, stash.shui.base.ShBaseSequentialRenderer)
+    @param platform: identifier describing the platform to get the UI implementation for. Defaults to None, in which case it tries to find the best UI.
+    @type platform: str
+    @return: (ShUI, ShSequentialRenderer)
+    @rtype: tuple of (stash.shui.base.ShBaseUI, stash.shui.base.ShBaseSequentialRenderer)
     """
     if platform is None:
         platform = get_platform()

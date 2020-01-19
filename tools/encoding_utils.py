@@ -17,10 +17,10 @@ DEFAULT_ENCODING = "utf-8"  # encoding to use to set encoding
 def is_encoding_line(s):
     """
     Check if the given line specifies an encoding.
-    :param s: line to check
-    :type s: str
-    :return: whether the given line specifies an encoding or not
-    :rtype:  bool
+    @param s: line to check
+    @type s: str
+    @return: whether the given line specifies an encoding or not
+    @rtype:  bool
     """
     return get_encoding_from_line(s) is not None
 
@@ -28,10 +28,10 @@ def is_encoding_line(s):
 def get_encoding_from_line(s):
     """
     Return the encoding specified in the given line or None if none was specified.   
-    :param s: line to check
-    :type s: str
-    :return: the encoding
-    :rtype: bool or None
+    @param s: line to check
+    @type s: str
+    @return: the encoding
+    @rtype: bool or None
     """
     exp = "^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)"
     m = re.match(exp, s)
@@ -44,10 +44,10 @@ def get_encoding_from_line(s):
 def get_encoding_of_file(p):
     """
     Return the encoding of a file.
-    :param p: path to file
-    :type p: str
-    :return: the encoding of the file or None
-    :rtype: str or None
+    @param p: path to file
+    @type p: str
+    @return: the encoding of the file or None
+    @rtype: str or None
     """
     with open(p, "r") as fin:
         lines = fin.readlines()
@@ -64,12 +64,12 @@ def get_encoding_of_file(p):
 def list_all_encodings(p, recursive=False, ignore_nonpy=False):
     """
     List all files in a directory and their encoding.
-    :param p: path to directory
-    :type p: str
-    :param recursive: whether to descend into subdirectories or not
-    :type recursive: bool
-    :param ignore_nonpy: skip files not ending with .py
-    :type ignore_nonpy: bool
+    @param p: path to directory
+    @type p: str
+    @param recursive: whether to descend into subdirectories or not
+    @type recursive: bool
+    @param ignore_nonpy: skip files not ending with .py
+    @type ignore_nonpy: bool
     """
     for fn in os.listdir(p):
         fp = os.path.join(p, fn)
@@ -86,8 +86,8 @@ def list_all_encodings(p, recursive=False, ignore_nonpy=False):
 def show_file_encoding(p):
     """
     Show the encoding of the file.
-    :param p: path to the file
-    :type p: str
+    @param p: path to the file
+    @type p: str
     """
     enc = get_encoding_of_file(p)
     if enc is None:
@@ -100,16 +100,16 @@ def show_file_encoding(p):
 def set_all_encodings(p, encoding, recursive=False, ignore_nonpy=False, force=False):
     """
     Set the encoding for all files in a directory.
-    :param p: path to directory
-    :type p: str
-    :param encoding: encoding to set
-    :type encoding: str
-    :param recursive: whether to descend into subdirectories or not
-    :type recursive: bool
-    :param ignore_nonpy: skip files not ending with .py
-    :type ignore_nonpy: bool
-    :param force: even set the encoding of a file if it already has an encoding
-    :type force: bool
+    @param p: path to directory
+    @type p: str
+    @param encoding: encoding to set
+    @type encoding: str
+    @param recursive: whether to descend into subdirectories or not
+    @type recursive: bool
+    @param ignore_nonpy: skip files not ending with .py
+    @type ignore_nonpy: bool
+    @param force: even set the encoding of a file if it already has an encoding
+    @type force: bool
     """
     for fn in os.listdir(p):
         fp = os.path.join(p, fn)
@@ -130,10 +130,10 @@ def set_all_encodings(p, encoding, recursive=False, ignore_nonpy=False, force=Fa
 def set_file_encoding(p, encoding):
     """
     Set the encoding of the file.
-    :param p: path to the file
-    :type p: str
-    :param encoding: encoding to set
-    :type encoding: str
+    @param p: path to the file
+    @type p: str
+    @param encoding: encoding to set
+    @type encoding: str
     """
     fe = get_encoding_of_file(p)
     if fe is None:
@@ -178,12 +178,12 @@ def set_file_encoding(p, encoding):
 def remove_all_encodings(p, recursive=False, ignore_nonpy=True):
     """
     Set the encoding for all files in a directory.
-    :param p: path to directory
-    :type p: str
-    :param recursive: whether to descend into subdirectories or not
-    :type recursive: bool
-    :param ignore_nonpy: skip files not ending with .py
-    :type ignore_nonpy: bool
+    @param p: path to directory
+    @type p: str
+    @param recursive: whether to descend into subdirectories or not
+    @type recursive: bool
+    @param ignore_nonpy: skip files not ending with .py
+    @type ignore_nonpy: bool
     """
     for fn in os.listdir(p):
         fp = os.path.join(p, fn)
@@ -204,8 +204,8 @@ def remove_all_encodings(p, recursive=False, ignore_nonpy=True):
 def remove_file_encoding(path):
     """
     Remove the encoding line from the given file.
-    :param path: path to remove from
-    :type path: str
+    @param path: path to remove from
+    @type path: str
     """
     with open(path, "r") as fin:
         lines = fin.readlines()

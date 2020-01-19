@@ -48,8 +48,8 @@ class ShIO(object):
         """
         Seek of stdout is not the real seek as file, it seems merely set
         the current posotion as the given parameter.
-        :param offset:
-        :return:
+        @param offset:
+        @return:
         """
         self.tell_pos = offset
 
@@ -143,7 +143,7 @@ class ShIO(object):
         This is useful for runtime to process multiple commands from user. The
         generator form also helps the program to keep reading and processing
         user command when a program is running at the same time.
-        :return: str:
+        @return: str:
         """
         ret = []
         while True:

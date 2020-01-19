@@ -71,12 +71,12 @@ def input_stream(files=()):
 def sizeof_fmt(num):
     """
     Return a human readable string describing the size of something.
-    :param num: the number in machine-readble form
-    :type num: int
-    :param base: base of each unit (e.g. 1024 for KiB -> MiB)
-    :type base: int
-    :param suffix: suffix to add. By default, the string returned by sizeof_fmt() does not contain a suffix other than 'K', 'M', ...
-    :type suffix: str
+    @param num: the number in machine-readble form
+    @type num: int
+    @param base: base of each unit (e.g. 1024 for KiB -> MiB)
+    @type base: int
+    @param suffix: suffix to add. By default, the string returned by sizeof_fmt() does not contain a suffix other than 'K', 'M', ...
+    @type suffix: str
     """
     for unit in ['B', 'KiB', 'MiB', 'GiB']:
         if num < 1024:
