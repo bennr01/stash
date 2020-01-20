@@ -1,5 +1,18 @@
 """
 This package contains the UI for StaSh.
+
+StaSh was originally build around pythonista's ui package. It was later
+rewriten to use objc_util features. Even later, it was once again rewriten
+to support crossplatform execution.
+
+As a result of these rewrites, there is still some UI-related code outside
+of L{stash.system.shui}. Also, StaSh's concept of UI principles is still
+based arround pythonista's ui module. This means, for example, that we see
+multiline-text as a single string. This means that we use one-dimensional
+coordinates as opposed to tkinter and other UI platforms.
+
+If you want to port StaSh to run on another OS, there is a porting guide
+in $STASH_ROOT/docs/
 """
 import os
 
@@ -12,8 +25,10 @@ ON_TRAVIS = "TRAVIS" in os.environ
 def get_platform():
     """
     Return a string describing the UI implementation to use.
+    
     @return: platform identifier
-    @rtype: str
+    @rtype: L{str}
+    @raises: NotImplementedError
     """
     # platform specific UIs
     if IN_PYTHONISTA:
@@ -41,10 +56,13 @@ def get_platform():
 def get_ui_implementation(platform=None):
     """
     Return the classes implementing the UI for the platform.
-    @param platform: identifier describing the platform to get the UI implementation for. Defaults to None, in which case it tries to find the best UI.
-    @type platform: str
-    @return: (ShUI, ShSequentialRenderer)
-    @rtype: tuple of (stash.shui.base.ShBaseUI, stash.shui.base.ShBaseSequentialRenderer)
+    
+    @param platform: identifier describing the platform to get the UI
+    implementation for. Defaults to None, in which case it tries to find
+    the best UI.
+    @type platform: L{str}
+    @return: The classes for (ShUI, ShSequentialRenderer)
+    @rtype: L{tuple} of (L{stash.system.shui.base.ShBaseUI}, L{stash.system.shui.base.ShBaseSequentialRenderer})
     """
     if platform is None:
         platform = get_platform()

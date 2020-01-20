@@ -1,5 +1,8 @@
 """
 UI base classes.
+
+The UI implementations should subclass these classes.
+For a guide for this, see the porting guide.
 """
 import ast
 import logging
@@ -12,15 +15,40 @@ from ..shcommon import K_CC, K_CD, K_HUP, K_HDN, K_LEFT, K_RIGHT, K_CU, K_TAB, K
 
 class ShBaseUI(object):
     """
-    Baseclass for the UI.
-    @param stash: assoziated StaSh instance
-    @type stash : StaSh
-    @param debug: debug flaf
-    @type debug: bool
-    @param debug_terminal: debug flag for the terminal
-    @type debug_terminal: bool
+    Baseclass for the main UI.
+    
+    This class is responsible for general UI behaviour and encompasses
+    the terminal.
+    
+    @ivar stash: parent StaSh instance
+    @type stash : L{stash.core.StaSh}
+    @ivar debug: if True, log debug informations
+    @type debug: L{bool}
+    @ivar debug_terminal: debug flag for the terminal
+    @type debug_terminal: L{bool}
+    @ivar logger: the logger for the UI
+    @type logger: L{logging.Logger}
+    @ivar terminal: the terminal. This is not set in this class, but must
+    be set by the subclasses
+    @type terminal: L{ShBaseTerminal}
+    @ivar BUFFER_MAX: max size of buffer
+    @type BUFFER_MAX: L{int}
+    @ivar TEXT_FONT: the text font to use, as (name, site)
+    @type TEXT_FONT: L{tuple} of (L{int}, L{int})
+    @ivar BUTTON_FONT: the font to use for buttons
+    @type BUTTON_FONT: L{tuple} of (L{int}, L{int})
+    @ivar vk_symbols: chars for the virtual keyrow
+    @type vk_symbols: L{str}
     """
     def __init__(self, stash, debug=False, debug_terminal=False):
+        """
+        @param stash: parent StaSh instance
+        @type stash : L{stash.core.StaSh}
+        @param debug: if True, log debug informations
+        @type debug: L{bool}
+        @param debug_terminal: debug flag for the terminal
+        @type debug_terminal: L{bool}
+        """
         self.stash = stash
         self.debug = debug
         self.debug_terminal = debug_terminal
@@ -53,6 +81,9 @@ class ShBaseUI(object):
     # ================== key commands ========================
     
     def dummyAction(self):
+        """
+        Do nothing.
+        """
         pass
 
     def controlCAction(self):
@@ -104,9 +135,10 @@ class ShBaseUI(object):
     
     def vk_tapped(self, vk):
         """
-        Called when a key was pressed
+        Called when a key was pressed.
+        
         @param vk: the pressed key
-        @type vk: int
+        @type vk: L{int}
         """
         if self.debug:
             self.logger.debug("vk_tapped({vk})".format(vk=vk))
@@ -161,18 +193,20 @@ class ShBaseUI(object):
     def history_present(self, history):
         """
         Present the history.
+        
         @param history: history to present
-        @type history: stash.system.shhistory.ShHistory
+        @type history: L{stash.system.shhistory.ShHistory}
         """
         raise NotImplementedError()
     
     def history_selected(self, line, idx):
         """
         This should be called when a history line was selected.
+        
         @param line: selected line
-        @type line: str
+        @type line: L{str}
         @param idx: index of selected line
-        @type idx: int
+        @type idx: L{int}
         """
         # Save the unfinished line user is typing before showing entries from history
         if self.stash.runtime.history.idx == -1:
@@ -185,13 +219,33 @@ class ShBaseTerminal(object):
     """
     This is the base class for the multiline text used for both in- and output.
     Implementations of the terminal should call the stash.useractionproxy.* methods as appropiate.
-    @param stash: assoziated StaSh instance
-    @type stash: stash.stash.StaSh
-    @param parent: the parent ShBaseUI
-    @type parent: ShBaseUI
+    
+    @ivar stash: parent StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar parent: the parent ShBaseUI
+    @type parent: L{ShBaseUI}
+    @ivar debug: if True, log debug informations
+    @type debug: L{bool}
+    @ivar tv_delegate: delegate for textview events
+    @ivar cursor_synced: whether the terminal cursor position is in sync with main screen
+    @type cursor_synced: L{bool}
+    @ivar font_size: size of font to use ofr the text
+    @type font_size: L{int}
+    @ivar text_color: color of the text (rgb tuple)
+    @type text_color: L{tuple} of (L{float}, L{float}, L{float})
+    @ivar tint_color: color for highlights
+    @type tint_color: L{tuple} of (L{float}, L{float}, L{float})
+    @ivar indicator_style: style for indicators
+    @type indicator_style: L{str}
     """
     
     def __init__(self, stash, parent):
+        """
+        @param stash: parent StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param parent: the parent ShBaseUI
+        @type parent: L{ShBaseUI}
+        """
         self.stash = stash
         self.parent = parent
         self.debug = self.parent.debug_terminal
@@ -214,19 +268,31 @@ class ShBaseTerminal(object):
     @property
     def text(self):
         """
-        The text of the terminal. Unicode.
+        The text of the terminal.
+        
+        @return: the text of the terminal
+        @rtype: L{six.text_type}
         """
         raise NotImplementedError()
     
     @text.setter
     def text(self, value):
+        """
+        Set the text of the terminal.
+        
+        @param text: the text to set
+        @type text: L{six.text_type}
+        """
         assert isinstance(value, six.text_type)
         raise NotImplementedError()
         
     @property
     def text_length(self):
         """
-        The length of the text
+        The length of the text.
+        
+        @return: the length of the text
+        @rtype: L{int}
         """
         return len(self.text)  # default implementation
     
@@ -234,20 +300,28 @@ class ShBaseTerminal(object):
     def selected_range(self):
         """
         The selected range.
+        
+        @return: the text selection as a tuple of (startindex, endindex)
+        @rtype: L{tuple} of (L{int}, L{int})
         """
         raise NotImplementedError()
 
     @selected_range.setter
     def selected_range(self, rng):
         """
-        Set the cursor selection range. Note it checks the current range first and
+        Set the cursor selection range.
+        
+        Note it checks the current range first and
         only change it if the new range is different. This is to avoid setting
         unwanted cursor_synced flag. Without the check, the cursor is repositioned
         with the same range, this turn on the cursor_synced flag BUT will NOT trigger
         the did_change_selection event (which is paired to cancel the cursor_synced
         flag).
         
-        Important: set self.cursor_synced = False if the above mentioned conditions are true
+        B{Important:} set self.cursor_synced = False if the above mentioned conditions are true
+        
+        @param rng: the text selection as a tuple of (startindex, endindex)
+        @type rng: L{tuple} of (L{int}, L{int})
         """
         raise NotImplementedError()
     
@@ -273,6 +347,7 @@ class ShBaseTerminal(object):
     def get_wh(self):
         """
         Return the number of columns and rows.
+        
         @return: number of columns and rows.
         @rtype: tuple of (int, int)
         """
@@ -282,15 +357,33 @@ class ShBaseTerminal(object):
 class ShTerminalDelegate(object):
     """
     The Delegate for the terminal.
+    
     This will be called from the ShUserActionProxy.
     The terminal should call the stash.useractionproxy.* methods instead.
-    See http://omz-software.com/pythonista/docs/ios/ui.html#textview
-    @param stash: associated StaSh instance
-    @type stash: stash.StaSh
-    @param terminal: the associated terminal
-    @type terminal: ShBaseTerminal
+    See U{http://omz-software.com/pythonista/docs/ios/ui.html#textview}.
+    
+    @ivar stash: parent StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar terminal: the associated terminal
+    @type terminal: L{ShBaseTerminal}
+    @ivar debug: if True, log debug informations
+    @type debug: L{bool}
+    @ivar mini_buffer: StaSh's mini buffer
+    @type mini_buffer: L{stash.system.shstreams.ShMiniBuffer}
+    @ivar main_screen: StaSh's main screen
+    @type main_screen: L{stash.system.shscreens.ShSequentialScreen}
+    @ivar logger: the delegate's logger
+    @type logger: L{logging.Logger}
     """
     def __init__(self, stash, terminal, debug=False):
+        """
+        @param stash: parent StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param terminal: the associated terminal
+        @type terminal: L{ShBaseTerminal}
+        @param debug: if True, log debug informations
+        @type debug: L{bool}
+        """
         self.stash = stash
         self.terminal = terminal
         self.debug = debug
@@ -299,19 +392,30 @@ class ShTerminalDelegate(object):
         self.logger = logging.getLogger('StaSh.TerminalDelegate')
 
     def textview_did_begin_editing(self, tv):
+        """
+        See pythonista's UI documentation.
+        """
         self.terminal.is_editing = True
 
     def textview_did_end_editing(self, tv):
+        """
+        See pythonista's UI documentation.
+        """
         self.terminal.is_editing = False
 
     def textview_should_change(self, tv, rng, replacement):
+        """
+        See pythonista's UI documentation.
+        """
         self.mini_buffer.feed(rng, replacement)
         return False  # always false
 
     def textview_did_change(self, tv):
         """
+        See pythonista's UI documentation.
+        
         The code is a fix to a possible UI system bug:
-            Some key-combos that delete texts, e.g. alt-delete, cmd-delete, from external
+        Some key-combos that delete texts, e.g. alt-delete, cmd-delete, from external
         keyboard do not trigger textview_should_change event. So following checks
         are added to ensure consistency between in-memory and actual UI.
         """
@@ -336,9 +440,13 @@ class ShTerminalDelegate(object):
                     self.mini_buffer.set_cursor(0, whence=2)
 
     def textview_did_change_selection(self, tv):
-        # This callback was used to provide approximated support for H-Up/Dn
-        # shortcuts from an external keyboard. It is no longer necessary as
-        # proper external keyboard support is now possible with objc_util.
+        """
+        See pythonista's UI documentation.
+        
+        This callback was used to provide approximated support for H-Up/Dn
+        shortcuts from an external keyboard. It is no longer necessary as
+        proper external keyboard support is now possible with objc_util.
+        """
 
         # If cursor is in sync already, as a result of renderer call, flag it
         # to False for future checking.
@@ -352,16 +460,25 @@ class ShTerminalDelegate(object):
 
 class ShBaseSequentialRenderer(object):
     """
-    A base class for a specific renderer for `ShSequentialScreen`. It does its job by
+    A base class for a specific renderer for `ShSequentialScreen`.
+    
+    It does its job by
     building texts from the in-memory screen and insert them to the
     terminal.
+    
+    @cvar FG_COLORS: mapping of fg color names to colors
+    @type FG_COLORS: L{dict} of L{str} -> ?
+    @cvar BG_COLORS: mapping of bg color names to colors
+    @type BG_COLORS: L{dict} of L{str} -> ?
 
-    @param stash: the StaSh instance
-    @type stash: stash.StaSh
-    @param screen: In memory screen
-    @type screen: stash.screens.ShSequentialScreen
-    @param terminal: The real terminal
-    @type terminal: ShBaseTerminal
+    @ivar stash: the StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar screen: In memory screen
+    @type screen: L{stash.system.shscreens.ShSequentialScreen}
+    @ivar terminal: The real terminal
+    @type terminal: L{ShBaseTerminal}
+    @ivar debug: if True, log debug informations
+    @type debug: L{bool}
     """
     FG_COLORS = {
         "default": None,
@@ -371,6 +488,16 @@ class ShBaseSequentialRenderer(object):
     }
     
     def __init__(self, stash, screen, terminal, debug=False):
+        """
+        @param stash: the StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param screen: In memory screen
+        @type screen: L{stash.system.shscreens.ShSequentialScreen}
+        @param terminal: The real terminal
+        @type terminal: L{ShBaseTerminal}
+        @param debug: if True, log debug informations
+        @type debug: L{bool}
+        """
         self.stash = stash
         self.screen = screen
         self.terminal = terminal
@@ -385,6 +512,7 @@ class ShBaseSequentialRenderer(object):
     def render(self, no_wait=False):
         """
         Render the screen buffer to the terminal.
+        
         @param no_wait: Immediately render the screen without delay.
         @type no_wait: bool
         """

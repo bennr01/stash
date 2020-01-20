@@ -24,6 +24,8 @@ class ShUI(ShBaseUI):
 class ShTerminal(ShBaseTerminal):
     """
     Stub terminal for testing.
+    
+    Use L{text} to access the content.
     """
     def __init__(self, *args, **kwargs):
         ShBaseTerminal.__init__(self, *args, **kwargs)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Stub ui to allow debug on PC
+Stub ui to allow debugging on PC
+
+See U{http://omz-software.com/pythonista/docs/ios/ui.html} for documentation.
 """
 
 AUTOCAPITALIZE_NONE = 0

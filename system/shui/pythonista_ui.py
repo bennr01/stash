@@ -1,4 +1,18 @@
 # coding: utf-8
+"""
+The UI implementation for the pythonista app.
+
+StaSh's original UI was build arround pythonista's "ui" module.
+It was later rewritten to use "objc_util", which allowed features like
+colored text.
+
+This file is a result of the restructure for crossplatform compatibility.
+It combines several older files while simultaneously splitting out non-platform
+specific code into L{stash.system.shui.base}.
+
+A lot of these functions and attributes are not documented here. In this
+case, take a look at pythonista's documentation for "ui".
+"""
 from time import time
 
 import six
@@ -40,10 +54,23 @@ class ShVk(ui.View):
     """
     The virtual keyboard container, which implements a swipe cursor positioning gesture
 
-    @type stash : StaSh
+    @ivar stash: parent StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar dx:
+    @type dx: L{int}
+    @ivar SCROLL_PER_CHAR: Number of pixels to scroll to move 1 character
+    @type SCROLL_PER_CHAR: L{float}
     """
 
     def __init__(self, stash, name='vks', flex='wh'):
+        """
+        @param stash: parent StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param name: name of this view
+        @type name: L{str}
+        @param flex: flexibility settings
+        @type flex: L{str}
+        """
         self.stash = stash
         self.flex = flex
         self.name = name
@@ -278,8 +305,6 @@ class ShUI(ShBaseUI, ui.View):
         """
         This is needed to make sure the extra key row is not covered by the
         keyboard frame when it pops up.
-        @param frame:
-        @return:
         """
         if self.on_screen:
             if frame[3] > 0:  # when keyboard appears
@@ -323,8 +348,9 @@ class ShUI(ShBaseUI, ui.View):
     def history_present(self, history):
         """
         Present a history popover.
+        
         @param history: history to present
-        @type history: ShHistory
+        @type history: L{stash.system.shhistory.ShHistory}
         """
         listsource = ui.ListDataSource(history.getlist())
         listsource.action = self.history_popover_tapped
@@ -341,6 +367,7 @@ class ShUI(ShBaseUI, ui.View):
     def history_popover_tapped(self, sender):
         """
         Called when a row in the history popover was tapped.
+        
         @param sender: sender of the event
         @type sender: ui.TableView
         """
@@ -349,9 +376,10 @@ class ShUI(ShBaseUI, ui.View):
     
     def _vk_tapped(self, sender):
         """
-        Called when a key was tapped
+        Called when a key was tapped.
+        
         @param sender: sender of the event
-        @type sender: ui.Button
+        @type sender: L{ui.Button}
         """
         # resolve key
         mapping = [
@@ -722,7 +750,9 @@ class ShTerminal(ShBaseTerminal):
     def size(self, value):
         """
         Set the width and height of the view
+        
         @param value: A tuple of (width, height)
+        @type value: L{tuple} of (L{int}, L{int})
         """
         self.tvo.setSize_(value)
 
@@ -788,9 +818,14 @@ class ShSequentialRenderer(ShBaseSequentialRenderer):
     A specific renderer for `ShSequentialScreen`. It does its job by
     building texts from the in-memory screen and insert them to the
     UI terminal.
-
-    @param ShSequentialScreen screen: In memory screen
-    @param ShTerminal terminal: The real UI terminal
+    
+    @cvar RENDER_INTERVAL: time to wait between renderings
+    @type RENDER_INTERVAL: L{float}
+    
+    @ivar last_rendered_time: time of last rendering
+    @type last_rendered_time: L{float}
+    @ivar render_thread: the thread used for rendering
+    @type render_thread: L{threading.Timer}
     """
     FG_COLORS = {
         'black': BlackColor,
@@ -885,7 +920,9 @@ class ShSequentialRenderer(ShBaseSequentialRenderer):
         """
         Render the screen buffer to the UITextView. Normally the rendering process
         is delayed to throttle the total attempts of rendering.
-        @param bool no_wait: Immediately render the screen without delay.
+        
+        @param no_wait: Immediately render the screen without delay.
+        @type no_wait: L{bool}
         """
         # The last_rendered_time is useful to ensure that the first rendering
         # is not delayed.
@@ -900,7 +937,11 @@ class ShSequentialRenderer(ShBaseSequentialRenderer):
 
     @on_main_thread
     def _render(self):
-        # This must run on the main UI thread. Otherwise it crashes.
+        """
+        Actually do the rendering.
+        
+        This must run on the main UI thread. Otherwise it crashes.
+        """
 
         self.last_rendered_time = time()
 
