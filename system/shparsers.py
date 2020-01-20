@@ -1,4 +1,7 @@
 # coding: utf-8
+"""
+Shell parsing.
+"""
 
 import os
 import string
@@ -48,7 +51,21 @@ _WORD_CHARS = string.digits + string.ascii_letters + r'''!#$%()*+,-./:=?@[]^_{}~
 
 
 class ShAssignment(object):
+    """
+    This class represents an key=value assignment.
+    
+    @ivar identifier: key of assignment
+    @type identifier: L{str}
+    @ivar value: assigned value
+    @type value: L{str}
+    """
     def __init__(self, identifier, value):
+        """
+        @param identifier: key of assignment
+        @type identifier: L{str}
+        @param value: assigned value
+        @type value: L{str}
+        """
         self.identifier = identifier
         self.value = value
 
@@ -61,7 +78,21 @@ class ShAssignment(object):
 
 
 class ShIORedirect(object):
+    """
+    This class represents an I/O redirect between scripts and files.
+    
+    @ivar operator: I/O operator
+    @type operator: L{str}
+    @ivar filename: path to redirect to/from
+    @type filename: L{str}
+    """
     def __init__(self, operator, filename):
+        """
+        @param operator: I/O operator
+        @type operator: L{str}
+        @param filename: path to redirect to/from
+        @type filename: L{str}
+        """
         self.operator = operator
         self.filename = filename
 
@@ -74,6 +105,19 @@ class ShIORedirect(object):
 
 
 class ShSimpleCommand(object):
+    """
+    This class represents a 'simple' command, meaning a command, arguments,
+    assignments and I/O redirect.
+    
+    @ivar assignments: variable assignments
+    @type assignments: L{list} of L{ShSimpleCommand}
+    @ivar cmd_word: the command itself
+    @type cmd_word: L{str}
+    @ivar args: arguments for the command
+    @type args: L{str}
+    @ivar io_redirect: I/O redirect of the command
+    @type io_redirect: L{ShIORedirect}
+    """
     def __init__(self):
         self.assignments = []
         self.cmd_word = ''
@@ -103,6 +147,14 @@ class ShSimpleCommand(object):
 
 
 class ShPipeSequence(object):
+    """
+    This class represents a chained list of commands.
+    
+    @ivar in_background: whether this sequence should be executed in background
+    @type ivar: L{bool}
+    @ivar lst: the list of individual commands
+    @type lst: L{list} of L{ShSimpleCommand}
+    """
     def __init__(self):
         self.in_background = False
         self.lst = []
@@ -122,6 +174,20 @@ class ShPipeSequence(object):
 
 
 class ShToken(object):
+    """
+    A token for the L{ShParser}.
+    
+    @ivar tok: the value of the token
+    @type tok: L{str}
+    @ivar spos: start position of the token (?)
+    @type spos: L{int}
+    @ivar epos: end position of the token(?)
+    @type epos: L{int}
+    @ivar ttype: type of the token
+    @type ttype: One of the L{ShToken}._* constants (L{str})
+    @ivar parts: the 'parts' of the token
+    @type parts: (L{list} of L{ShToken}) or L{None}
+    """
 
     _PUNCTUATOR = '_PUNCTUATOR'
     _PIPE_OP = '_PIPE_OP'
@@ -139,6 +205,16 @@ class ShToken(object):
     _CMD = '_CMD'
 
     def __init__(self, tok='', spos=-1, ttype=None, parts=None):
+        """
+        @param tok: the value of the token
+        @type tok: L{str}
+        @param spos: start position of the token (?)
+        @type spos: L{int}
+        @param ttype: type of the token
+        @type ttype: One of the L{ShToken}.* constants (L{str})
+        @param parts: the 'parts' of the token
+        @type parts: (L{list} of L{ShToken}) or L{None}
+            """
         self.tok = tok
         self.spos = spos
         self.epos = spos + len(tok)
@@ -155,12 +231,31 @@ class ShParser(object):
     """
     Parse the command line input to provide basic semantic analysis.
     The results will be further expanded by `ShExpander`.
+    
+    @ivar debug: enable debug mode
+    @type debug: L{bool}
+    @ivar logger: the looger of this parser
+    @type logger: L{logging.Logger}
+    @ivar parser: The actual 'parser'
+    @type parser: L{pyparsing.ParserElement}
+    @ivar parser_within_dq: parser used to parse strings in double quotes
+    @type parser_within_dq: L{pyparsing.ParserElement}
+    @ivar next_word_type: the type of the next word
+    @type next_word_type: One of the L{ShParser}._* constants
+    @ivar tokens: current list of tokens
+    @type tokens: L{list} of L{ShToken}
+    @ivar parts: parts used to construct the tokens
+    @type parts: L{list} of L{ShToken}
     """
     _NEXT_WORD_CMD = '_NEXT_WORD_CMD'
     _NEXT_WORD_VAL = '_NEXT_WORD_VAL'  # rhs of assignment
     _NEXT_WORD_FILE = '_NEXT_WORD_FILE'
 
     def __init__(self, debug=False):
+        """
+        @param debug: enable debug mode
+        @type debug: L{bool}
+        """
 
         self.debug = debug
         self.logger = logging.getLogger('StaSh.Parser')
@@ -219,6 +314,14 @@ class ShParser(object):
         self.parts = []
 
     def parse(self, line):
+        """
+        Parse a line.
+        
+        @param line: line to parse
+        @type line: L{str}
+        @return: a tuple of (tokens, parse result)
+        @rtype: L{tuple} of (L{list} of L{ShToken}, L{pyparsing.ParseResult})
+        """
         if self.debug:
             self.logger.debug('line: %s' % repr(line))
         self.next_word_type = ShParser._NEXT_WORD_CMD
@@ -228,14 +331,22 @@ class ShParser(object):
         return self.tokens, parsed
 
     def parse_within_dq(self, s):
-        """ Take the input string as if it is inside a pair of double quotes
+        """
+        Take the input string as if it is inside a pair of double quotes
+        
+        @param s: string to parse
+        @type s: L{str}
+        @return: a tuple of (tokens, parse result)
+        @rtype: L{tuple} of (L{list} of L{ShTokens}, L{pyparsing.ParseResult})
         """
         self.parts = []
         parsed = self.parser_within_dq.parseString(s, parseAll=True)
         return self.parts, parsed
 
     def identifier_action(self, s, pos, toks):
-        """ This function is only needed for debug """
+        """
+        This function is only needed for debugging.
+        """
         if self.debug:
             self.logger.debug('identifier: %d, %s' % (pos, toks[0]))
 
@@ -346,15 +457,39 @@ class ShExpander(object):
     """
     Expand variables, wildcards, escapes, quotes etc. based on parsed results.
 
-    @type stash: StaSh
+    @ivar stash: associated StaSh object
+    @type stash: L{stash.core.StaSh}
+    @ivar debug: enable debug mode
+    @type debug: L{bool}
+    @ivar logger: the logger of this expander
+    @type logger: L{logging.Logger}
     """
 
     def __init__(self, stash, debug=False):
+        """
+        @param stash: associated StaSh object
+        @type stash: stash.core.StaSh
+        @param debug: enable debug mode
+        @type debug: L{bool}
+        """
         self.stash = stash
         self.debug = debug
         self.logger = logging.getLogger('StaSh.Expander')
 
     def expand(self, line):
+        """
+        Expand a line.
+        
+        @param line: line to expand
+        @type line: L{str}
+        @return: a generator, first yielding the (line, number of pipe sequences)
+        and later the pipe sequences
+        @rtype: L{types.GeneratorType} yielding first L{tuple} of (L{str} and L{int}),
+        then L{ShPipeSequence}s
+        
+        @raises: L{stash.system.shcommon.ShSingleExpansionRequired}
+        @raises: L{stash.system.shcommon.ShBadSubstitution}
+        """
 
         if self.debug:
             self.logger.debug('line: %s' % repr(line))
@@ -440,6 +575,16 @@ class ShExpander(object):
             yield pipe_sequence
 
     def history_subs(self, tokens, parsed):
+        """
+        Substitute history references.
+        
+        @param tokens: tokens to process
+        @type tokens:L{List} of L{ShToken}
+        @param parsed: the parsing result
+        @type parsed: L{pyparsing.ParseResult}
+        @return: tuple of (tokens, parsed)
+        @rtype: L{tuple} of (L{list} of L{Shtoken}, L{pyparsing.ParseResult})
+        """
         history_found = False
         for t in tokens:
             if t.ttype == ShToken._CMD and t.tok.startswith('!'):
@@ -455,6 +600,18 @@ class ShExpander(object):
         return tokens, parsed
 
     def alias_subs(self, tokens, parsed, exclude=None):
+        """
+        Substitute aliases.
+        
+        @param tokens: tokens to process
+        @type tokens:L{List} of L{ShToken}
+        @param parsed: the parsing result
+        @type parsed: L{pyparsing.ParseResult}
+        @param exclude: list of tokens to exclude
+        @type exclude: L{list} of L{str}
+        @return: tuple of (tokens, parsed)
+        @rtype: L{tuple} of (L{list} of L{Shtoken}, L{pyparsing.ParseResult})
+        """
         # commands have leading backslash will not be alias is expanded
         # because an alias cannot begin with a backslash and the matching
         # here is done using the whole word of the command, i.e. including
@@ -476,6 +633,15 @@ class ShExpander(object):
         return tokens, parsed
 
     def expand_word(self, word):
+        """
+        Expand a word.
+        
+        @param word: word to expand
+        @type word: ShToken
+        @return:
+        @rtype: L{list} of L{str}
+        @raises: L{stash.system.shcommon.ShInternalError}
+        """
         if self.debug:
             self.logger.debug(word.tok)
 
@@ -534,6 +700,16 @@ class ShExpander(object):
         return fields
 
     def expand_escaped(self, tok):
+        r"""
+        Expand an escaped token.
+        
+        E.g. expand the string "\n" to the character '\n'.
+        
+        @param tok: token string to expand
+        @type tok: L{str}
+        @return: the expanded string.
+        @rtype: L{tuple} of L{str} and L{str}
+        """
         if self.debug:
             self.logger.debug(tok)
 
@@ -552,6 +728,14 @@ class ShExpander(object):
             return c, c
 
     def expand_escaped_oct_or_hex(self, tok):
+        """
+        Expand an escaped oct or hex value.
+        
+        @param tok: string to expand
+        @type tok: L{str}
+        @return: the expanded string twice.
+        @rtype: L{tuple} of (L{str}, L{str})
+        """
         if self.debug:
             self.logger.debug(tok)
 
@@ -571,6 +755,13 @@ class ShExpander(object):
         return tok[1:-1], self.escape_wildcards(tok[1:-1])
 
     def expand_dq_word(self, tok):
+        """
+        @param tok:
+        @type tok: L{str}
+        @return:
+        @rtype: L{tuple} of (L{str}, L{str})
+        @raises: L{stash.system.shcommon.ShInternalError}
+        """
         if self.debug:
             self.logger.debug(tok)
         parts, parsed = self.stash.runtime.parser.parse_within_dq(tok[1:-1])
@@ -609,6 +800,14 @@ class ShExpander(object):
         return ret
 
     def expanduser(self, s):
+        """
+        Expand ~user references.
+        
+        @param s: string to expand
+        @type s: L{str}
+        @return: the expanded string
+        @rtype: L{str}
+        """
         if self.debug:
             self.logger.debug(s)
 
@@ -624,6 +823,16 @@ class ShExpander(object):
         return s
 
     def expandvars(self, s):
+        """
+        Expand environment variables.
+        
+        @param s: string to expand
+        @type s: L{str}
+        @return: the expanded string
+        @rtype: L{str}
+        @raises: L{stash.system.shcommon.ShBadSubstitution}
+        @raises: L{stash.system.shcommon.ShInternalError}
+        """
         if self.debug:
             self.logger.debug(s)
 
@@ -704,6 +913,14 @@ class ShExpander(object):
         return es
 
     def escape_wildcards(self, s0):
+        """
+        Escape wildcards.
+        
+        @param s0: string to escape
+        @type s0: L{str}
+        @return: the escaped string
+        @rtype: L{str}
+        """
         return ''.join(('[%s]' % c if c in '[]?*' else c) for c in s0)
 
 
@@ -711,9 +928,26 @@ class ShExpander(object):
 class ShCompleter(object):
     """
     This class provides command line auto-completion for the shell.
+    
+    It depends on L{libcompleter}.
+    
+    @ivar stash: the associated StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar debug: if True, enable debug information
+    @type debug: L{bool}
+    @ivar max_possibilities: max number of possible completions to show.
+    @type max_possibilities: L{int}
+    @ivar logger: the logger of this completer
+    @type logger: L{logging.Logger}
     """
 
     def __init__(self, stash, debug=False):
+        """
+        @param stash: the associated StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param debug: if True, enable debug information
+        @type debug: L{bool}
+        """
         self.stash = stash
         self.debug = debug
         self.max_possibilities = stash.config.getint('display', 'AUTO_COMPLETION_MAX')
@@ -724,8 +958,10 @@ class ShCompleter(object):
         Attempt to auto-completes the given line. Returns the completed
         line and a list of possibilities.
 
-        @param str line: The line to complete
-        @rtype: (str, [str])
+        @param line: The line to complete
+        @type line: L{str}
+        @return: the completed line and all possibile completions
+        @rtype: L{tuple} of (L{str}, L{list} of L{str})
         """
         _, current_state = self.stash.runtime.get_current_worker_and_state()
 
@@ -807,6 +1043,14 @@ class ShCompleter(object):
         return newline, all_names
 
     def path_match(self, word_to_complete):
+        """
+        Find posssible path matches for completion.
+        
+        @param word_to_complete: string to find matches for
+        @type word_to_complete: L{str}
+        @return: possible macthes
+        @rtype: L{list} of L{str}
+        """
         # os.path.xxx functions do not like escaped whitespace
         word_to_complete_normal_whites = word_to_complete.replace('\\ ', ' ')
         full_path = os.path.expanduser(word_to_complete_normal_whites)
@@ -838,6 +1082,14 @@ class ShCompleter(object):
         return path_names
 
     def format_all_names(self, all_names):
+        """
+        Format the given names. Probably for output.
+        
+        @param all_names: list of names to format
+        @type all_names: L{list} of L{str}
+        @return: a string containing all formated names, ending with a newline
+        @rtype: L{str}
+        """
         # only show the last component to be completed in a directory path
         return '  '.join(
             os.path.basename(os.path.dirname(name)) + '/' if name.endswith('/') else os.path.basename(name)

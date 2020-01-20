@@ -1,6 +1,10 @@
 # coding: utf-8
 """
 In-memory screen related code.
+
+@var DEFAULT_CHAR: the default character to use
+@type DEFAULT_CHAR: L{ShChar}
+@var DEFAULT_LINE: the default line
 """
 import itertools
 import logging
@@ -36,14 +40,25 @@ _Char = namedtuple("_Char",
 class ShChar(_Char):
     """
     Class of attributed character.
-    @param str data: The actual character
-    @param str fg: The foreground color
-    @param str bg: The background color
-    @param bool bold: Bold font
-    @param bool italics: Italics font
-    @param bool underscore: Underline the character
-    @param bool reverse: NOT Implemented
-    @param bool strikethrough: Strike through the character
+    
+    This class stores a character and its style options.
+    
+    @ivar data: The actual character
+    @type data: L{str}
+    @ivar fg: The foreground color
+    @type fg: L{str}
+    @ivar bg: The background color
+    @type bg: L{str}
+    @ivar bold: Bold font
+    @type bold: L{bool}
+    @ivar italics: Italics font
+    @type italics: L{bool}
+    @ivar underscore: Underline the character
+    @type underscore: L{bool}
+    @ivar reverse: NOT Implemented
+    @type reverse: L{bool}
+    @ivar strikethrough: Strike through the character
+    @type strikethrough: L{bool}
     """
     __slots__ = ()
 
@@ -59,18 +74,41 @@ class ShChar(_Char):
             reverse=False,
             strikethrough=False
     ):
+        """
+        Create and initialize a new character.
+        
+        @param data: The actual character
+        @type data: L{str}
+        @param fg: The foreground color
+        @type fg: L{str}
+        @param bg: The background color
+        @type bg: L{str}
+        @param bold: Bold font
+        @type bold: L{bool}
+        @param italics: Italics font
+        @type italics: L{bool}
+        @param underscore: Underline the character
+        @type underscore: L{bool}
+        @param reverse: NOT Implemented
+        @type reverse: L{bool}
+        @param strikethrough: Strike through the character
+        @type strikethrough: L{bool}
+        @return: the initialized Char
+        @rtype: L{ShChar}
+            """
         return _Char.__new__(cls, data, fg, bg, bold, italics, underscore, strikethrough, reverse)
     
     @staticmethod
     def same_style(char1, char2):
         """
-        Check if both chars have the same style
+        Check if both chars have the same style.
+        
         @param char1: first char to compare
-        @type char1: ShChar
+        @type char1: L{ShChar}
         @param char2: second char to compare
-        @type char2: ShChar
+        @type char2: L{ShChar}
         @return: whether both chars have the same style or not
-        @rtype: bool
+        @rtype: L{bool}
         """
         return char1.fg == char2.fg \
                and char1.bg == char2.bg \
@@ -85,6 +123,14 @@ DEFAULT_LINE = itertools.repeat(DEFAULT_CHAR)
 
 
 def take(n, iterable):
+    """
+    Return the first n elements of the given iterable.
+    
+    @param n: number of elements
+    @type n: L{int}
+    @param iterable: iterable to process
+    @type iterable: an iterable
+    """
     return list(itertools.islice(iterable, n))
 
 
@@ -94,10 +140,47 @@ class ShSequentialScreen(object):
     The sequential type in-memory screen. Running scripts can only
     add characters at the end of the screen buffer, no backspace or
     cursor movement is possible. Hence it is sequential.
-    @param int nlines_max: The maximum number of lines to be stored.
+    
+    StaSh sees the output on the screen as a single string. This means
+    indexes will point to that letter from the start. E.g. Index 200 may
+    be the 40th character on the 13th line. Linebreaks count towards the
+    indexes.
+    
+    @ivar stash: the parent stash instance
+    @type stash: L{stash.core.StaSh}
+    @ivar nlines_max: The maximum number of lines to be stored.
+    @type nlines_max: L{int}
+    @ivar debug: if True, log debug informations
+    @type debug: L{bool}
+    @ivar lock: lock for thread access control
+    @type lock: L{threading.Lock}
+    @ivar attrs: default attributes for characters
+    @type attrs: L{ShChar}
+    
+    @ivar cursor_xs: cursor position start
+    @type cursor_xs: L{int}
+    @ivar cursor_xe: cursor position end
+    @type cursor_xe: L{int}
+    @ivar x_drawend: the start index of the user-modifiable string
+    @type x_drawend: L{int}
+    @ivar intact_left_bound: Helper value for performance.
+    Only texts outside of the bounds get rebuilt and re-rendered.
+    Note this value is relative to start of Terminal text.
+    @type intact_left_bound: L{int}
+    @ivar intact_right_bound: All chars after this location must be
+    re-rendered. Note this value is relative to start of the Screen's buffer.
+    @type intact_right_bound: L{int}
     """
 
     def __init__(self, stash, nlines_max=100, debug=False):
+        """
+        @param stash: the parent stash instance
+        @type stash: L{stash.core.StaSh}
+        @param nlines_max: The maximum number of lines to be stored.
+        @type nlines_max: L{int}
+        @param debug: if True, log debug informations
+        @type debug: L{bool}
+        """
 
         self.stash = stash
         self.nlines_max = nlines_max
@@ -114,6 +197,7 @@ class ShSequentialScreen(object):
     def reset(self, *args):  # *args is a necessary placeholder
         """
         Clear the screen and reset its state.
+        
         *args is needed because dispatch from stream always call handlers
         with at least one parameter (even it is a dummy 0).
         """
@@ -142,8 +226,10 @@ class ShSequentialScreen(object):
     @property
     def cursor_x(self):
         """
-        Note this method returns both bounds of cursor as a tuple.
-        @rtype: (int, int)
+        This method returns both bounds of cursor as a tuple.
+        
+        @return: both bounds of the cursor
+        @rtype: L{tuple} of (L{int}, L{int})
         """
         return self.cursor_xs, self.cursor_xe
 
@@ -151,22 +237,29 @@ class ShSequentialScreen(object):
     def cursor_x(self, value):
         """
         This method sets both bounds of the cursor to the same value.
-        @param int value: New value for both bounds of the cursor
-        @return:
+        
+        @param value: New value for both bounds of the cursor
+        @type value: L{int}
         """
         self.cursor_xs = self.cursor_xe = value
 
     @property
     def text(self):
         """
-        @rtype: str
+        The text of the screen, without styles.
+        
+        @return: the text
+        @rtype: L{str}
         """
         return ''.join(c.data for c in self._buffer)
 
     @property
     def text_length(self):
         """
-        @rtype: int
+        The length of the text. Read-only.
+        
+        @return: the length of the text.
+        @rtype: L{int}
         """
         return len(self._buffer)
 
@@ -175,8 +268,11 @@ class ShSequentialScreen(object):
         """
         Trailing characters that need to be re-rendered (this is not the same
         as modifiable chars).
+        
         Note this return a list of ShChar not a String.
-        @rtype: [ShChar]
+        
+        @return: the trailing characters that need to be re-rendered.
+        @rtype: L{list} of L{ShChar}
         """
         _, rbound = self.get_bounds()
         return [self._buffer[x] for x in xrange(rbound, len(self._buffer))]
@@ -186,7 +282,9 @@ class ShSequentialScreen(object):
         """
         The location where characters start to be modifiable by users. The value
         is relative to the beginning of screen buffer.
-        @rtype: int
+        
+        @return: the location where characters start to be modifiable by the user.
+        @rtype: L{int}
         """
         # The position is either the x_drawend or last LF location plus one,
         # whichever is larger.
@@ -201,7 +299,9 @@ class ShSequentialScreen(object):
         """
         The range of modifiable characters. Values are relative to the
         beginning of screen buffer.
-        @rtype: (int, int)
+        
+        @return: the range of modifiable characters.
+        @rtype: L{tuple} of (L{int}, L{int})
         """
         return self.x_modifiable, self.text_length
 
@@ -209,7 +309,9 @@ class ShSequentialScreen(object):
     def modifiable_string(self):
         """
         A string represents the characters that are in the modifiable range.
-        @rtype: str
+        
+        @return: the characters in the modifiable range.
+        @rtype: L{str}
         """
         return ''.join(self._buffer[idx].data for idx in xrange(*self.modifiable_range))
 
@@ -218,7 +320,9 @@ class ShSequentialScreen(object):
         """
         Set the modifiable_string to the given string using default Char properties.
         This method is only called by UI delegate side, i.e. NOT running scripts.
-        @param str s: A new value for modifiable_string.
+        
+        @param s: A new value for modifiable_string.
+        @type s: L{str}
         """
         self.replace_in_range(self.modifiable_range, s)
 
@@ -226,7 +330,11 @@ class ShSequentialScreen(object):
     def acquire_lock(self, blocking=True):
         """
         Lock the screen for modification so that it will not be corrupted.
+        
         @param blocking: By default the method blocks until a lock is acquired.
+        @type blocking: L{bool}
+        @return: a context manager for locking the screen
+        @rtype: context manager
         """
         locked = self.lock.acquire(blocking)
         try:
@@ -240,8 +348,11 @@ class ShSequentialScreen(object):
         """
         This method is used for when operations like replacing, insertion, deletion
         are needed in the middle of the character buffer.
-        @param n:
-        @return:
+        
+        @param n: number of chars to rotate
+        @type n: L{int}
+        @return: a context manager
+        @rtype: a context manager
         """
         self._buffer.rotate(n)
         try:
@@ -254,7 +365,9 @@ class ShSequentialScreen(object):
         Get the left and right intact bounds of the screen buffer.
         The bounds could become negative if entire screen is flushed out before
         any rendering. In this case, the bounds need to be adjusted accordingly.
-        @rtype (int, int):
+        
+        @return: he left and right intact bounds of the screen buffer
+        @rtype: L{tuple} of (L{int}, L{int}):
         """
         rbound = self.intact_right_bound if self.intact_right_bound >= 0 else 0
         lbound = self.intact_left_bound if rbound > 0 else 0
@@ -271,13 +384,18 @@ class ShSequentialScreen(object):
     def replace_in_range(self, rng, s, relative_to_x_modifiable=False, set_drawend=False):
         """
         Replace the buffer content in the given range. This method should
-        ONLY be called from the UI delegation side, i.e. NOT running
+        
+        ONLY to be called from the UI delegation side, i.e. NOT running
         scripts.
-        @param (int, int) rng: Range of buffer to be replaced
-        @param str s: String to be inserted (to be converted to Char with default properties).
-        @param bool relative_to_x_modifiable: If True, the range is relative to the x_modifiable
-        @param bool set_drawend: If True, the x_drawend will be set to the end of this replacement.
-        @return:
+        
+        @param rng: Range of buffer to be replaced
+        @type rng: L{tuple} of (L{int}, L{int})
+        @param s: String to be inserted (to be converted to Char with default properties).
+        @type s: L{str}
+        @param relative_to_x_modifiable: If True, the range is relative to the x_modifiable
+        @type relative_to_x_modifiable: L{bool}
+        @param set_drawend: If True, the x_drawend will be set to the end of this replacement.
+        @type set_drawend: L{bool}
         """
         if rng is None:
             rng = (len(self._buffer), len(self._buffer))
@@ -315,8 +433,9 @@ class ShSequentialScreen(object):
     def _pop_chars(self, n=1):
         """
         Remove number of given characters form the right END of the buffer
-        @param n:
-        @return:
+        
+        @param n: number of chars to remove
+        @type n: L{int}
         """
         for _ in xrange(n):
             self._buffer.pop()
@@ -379,7 +498,9 @@ class ShSequentialScreen(object):
         """
         Add given char to the right end of the buffer and update the last draw
         location. This method should ONLY be called by ShStream.
-        @param str c: A new character to draw
+        
+        @param c: A new character to draw
+        @type c: L{str}
         """
 
         if self.cursor_xs == self.text_length:  # cursor is at the end
@@ -434,7 +555,9 @@ class ShSequentialScreen(object):
     def delete_characters(self, count=0):
         """
         Delete n characters from cursor including cursor within the current line.
-        @param count: If count is 0, delete till the next newline.
+        
+        @param count: Number of characters to delete. If 0, delete till the next newline.
+        @type count: L{int}
         """
         if self.cursor_xs == self.text_length or self._buffer[self.cursor_xs] == '\n':
             return
@@ -453,8 +576,18 @@ class ShSequentialScreen(object):
     def erase_in_line(self, mode=0):
         """
         Erase a line with different mode. Note the newline character is NOT deleted.
-        @param mode:
-        @return:
+        
+        @param mode: mode to use for erasion.
+        
+        Possible values:
+        
+        C{0}: erase from cursor to end of line, including cursor
+        
+        C{1}: erase from beginning of line to cursor, including cursor
+        
+        C{2} (and other): erase the complete line
+        
+        @type mode: L{int}
         """
         # Calculate the range for erase
         if mode == 0:  # erase from cursor to end of line, including cursor
@@ -493,8 +626,10 @@ class ShSequentialScreen(object):
     # noinspection PyProtectedMember
     def select_graphic_rendition(self, *attrs):
         """
-        Act on text style ASCII escapes
-        @param [ShChar] attrs: List of characters and their attributes
+        Act on text style ASCII escapes.
+        
+        @param attrs: List of characters and their attributes
+        @type attrs: L{list} of L{ShChar}
         """
         replace = {}
 
@@ -513,7 +648,12 @@ class ShSequentialScreen(object):
 
     def load_pyte_screen(self, pyte_screen):
         """
+        Render a pyte screen to this screen.
+        
         This method is for command script only, e.g. ssh.
+        
+        @param pyte_screen: screen to render
+        @type pyte_screen: L{pyte.Screen}
         """
 
         with self.acquire_lock():

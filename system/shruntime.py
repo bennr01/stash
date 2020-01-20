@@ -1,4 +1,8 @@
 # coding: utf-8
+"""
+The runtime manages states and the execution of commands.
+"""
+
 import io
 import os
 import sys
@@ -51,9 +55,54 @@ alias unmount='umount'
 class ShRuntime(object):
     """
     Runtime class responsible for parsing and executing commands.
+    
+    @ivar stash: the parent StaSh instance.
+    @type stash: L{stash.core.StaSh}
+    @ivar parser: the parser
+    @type parser: L{stash.system.shparsers.ShParser}
+    @ivar expander: the expander
+    @type expander: L{stash.system.shparsers.ShExpander}
+    @ivar debug: if True, log debug information
+    @type debug: L{bool}
+    @ivar logger: the logger of the runtime
+    @type logger: L{logging.Logger}
+    @ivar state: the global state
+    @type state: L{stash.system.shthreads.ShState}
+    @ivar child_thread: current foreground child thread
+    @type child_thread: L{stash.system.shthreads.ShBaseThread} or L{None}
+    @ivar worker_registry: the worker registry
+    @type worker_registry: L{stash.system.shthreads.ShWorkerRegistry}
+    @ivar rcfile: path to the resource file
+    @type rcfile: L{str}
+    @ivar historyfile: path to the history file
+    @type historyfile: L{str}
+    @ivar py_traceback: if True, show the full traceback when an exception occurs
+    @type py_traceback: L{bool}
+    @ivar py_pdb: if True, start the debugger when an exception occurs
+    @type py_pdb: L{bool}
+    @ivar input_encoding_utf8: This is one of the greatest unsolved mysteries of StaSh
+    @type input_encoding_utf8: py_pdb: L{bool}
+    @ivar ShThread: the thread class to use for workers.
+    @type ShThread: a subclass of L{stash.system.shthreads.ShBaseThread}
+    @ivar colored_errors: if True, show colored error messages
+    @type colored_errors: L{bool}
+    @ivar history: the history manager object
+    @type history: L{stash.system.shhistory.ShHistory}
     """
 
     def __init__(self, stash, parser, expander, no_historyfile=False, debug=False):
+        """
+        @param stash: the parent StaSh instance.
+        @type stash: L{stash.core.StaSh}
+        @param parser: the parser
+        @type parser: L{stash.system.shparsers.ShParser}
+        @param expander: the expander
+        @type expander: L{stash.system.shparsers.ShExpander}
+        @param no_historyfile: if True, do not use a history file.
+        @type no_historyfile: L{bool}
+        @param debug: if True, log debug information
+        @type debug: L{bool}
+        """
         self.stash = stash
         self.parser = parser
         self.expander = expander
@@ -107,6 +156,14 @@ class ShRuntime(object):
         self.history.swap("StaSh.runtime")
 
     def load_rcfile(self, no_rcfile=False):
+        """
+        Load the default RC and the normal resource file.
+        
+        The RC to load if 'no_rcfile' is nonzero is specified in L{rcfile}.
+        
+        @param no_rcfile: do not load the non-default RC file.
+        @type no_rcfile: L{bool}
+        """
         self.stash(_DEFAULT_RC.splitlines(), persistent_level=1, add_to_history=False, add_new_inp_line=False)
 
         if not no_rcfile and os.path.exists(self.rcfile) and os.path.isfile(self.rcfile):
@@ -119,12 +176,13 @@ class ShRuntime(object):
     def write_error_message(self, stream, msg, prefix=None, log=True):
         """
         Write/print an error message to stream.
+        
         @param stream: file to write to or None
-        @type stream: file or None
-        @param msg: error message
-        @type msg: str
+        @type stream: L{stash.system.shio.ShIO} or L{file} or L{None}
+        @param msg: error message to write
+        @type msg: L{str}
         @param log: if true, log message
-        @type log: boolean
+        @type log: L{bool}
         """
         if prefix is None:
             prefix = "stash: "
@@ -141,6 +199,16 @@ class ShRuntime(object):
             stream.write(prefix + msg)
 
     def find_script_file(self, filename):
+        """
+        Locate the scriptfile for the given filename/commandname.
+        
+        @param filename: name of file/command to locate
+        @type filename: L{str}
+        @return: path to the filename
+        @rtype: L{str}
+        @raises: L{stash.system.shcommon.ShIsDirectory}
+        @raises: L{stash.system.shcommon.ShFileNotFound}
+        """
         _, current_state = self.get_current_worker_and_state()
 
         dir_match_found = False
@@ -169,7 +237,14 @@ class ShRuntime(object):
             raise ShFileNotFound('%s: command not found' % filename)
 
     def get_all_script_names(self):
-        """ This function used for completer, whitespaces in names are escaped"""
+        """
+        Find all known scrip names / commands.
+        
+        This function is used by the completer, whitespaces in names are escaped.
+        
+        @return: a list of all possible commands.
+        @rtype: L{list} of L{str}
+        """
         _, current_state = self.get_current_worker_and_state()
         all_names = []
         for path in ['.'] + current_state.environ_get('BIN_PATH').split(':'):
@@ -194,28 +269,44 @@ class ShRuntime(object):
             cwd=None
     ):
         """
-        This is the entry for running shell commands.
+        This is the entry point for running shell commands.
 
-        @param input_: Default to ShIO
-        @param final_ins:
-        @param final_outs:
-        :param final_errs
-        @param add_to_history:
-        @param add_new_inp_line:
+        @param input_: Input to execute. Defaults to L{stash.core.StaSh.io} (read from console).
+        @type input_: L{str} or L{list} of L{str} or L{stash.system.shio.ShIO} or L{stash.system.shparsers.ShPipeSequence}
+        @param final_ins: stdin for command
+        @type final_ins: L{io.IOBase} or L{None}
+        @param final_outs: stdout for command
+        @type final_outs: L{io.IOBase} or L{None}
+        @param final_errs: stderr for command
+        @type final_errs: L{io.IOBase} or L{None}
+        @param add_to_history: if True, add command to history.
+        @type add_to_history: L{bool}
+        @param add_new_inp_line: write a new input prompt after the script finishes.
+        @type add_new_inp_line: L{bool} or L{None}
+        
         @param persistent_level:
-                    The persistent level dictates how variables from child shell
-                    shall be carried over to the parent shell.
-                    Possible values are:
-                    0 - No persistent at all (shell script is by default in this mode)
-                    1 - Full persistent. Parent's variables will be the same as child's
-                        (User command from terminal is in this mode).
-                    2 - Semi persistent. Any more future children will have starting
-                        variables as the current child's ending variables. (__call__
-                        interface is by default in this mode).
-        @param environ:
-        @param cwd:
-        @return:
-        @rtype: ShBaseThread
+        The persistent level dictates how variables from child shell
+        shall be carried over to the parent shell.
+        
+        Possible values are:
+        
+        C{0}: No persistent at all (shell script is by default in this mode)
+        
+        
+        C{1}: Full persistent. Parent's variables will be the same as child's
+        (User command from terminal is in this mode).
+        
+        C{2}: Semi persistent. Any more future children will have starting
+        variables as the current child's ending variables. (__call__
+        interface is by default in this mode).
+        
+        @type persistent_level: L{int}
+        @param environ: environment variables for script
+        @type environ L{dict}
+        @param cwd: CWD for command to run in
+        @type cwd: L{str} or L{None}
+        @return: the worker used to run the command.
+        @rtype: L{stash.system.shthreads.ShBaseThread}
         """
 
         # By default read from the terminal
@@ -379,6 +470,11 @@ class ShRuntime(object):
         return child_thread
 
     def script_will_end(self):
+        """
+        Called after a script finishes exection.
+        
+        Write a new prompt and reset handlers.
+        """
         self.stash.io.write(self.get_prompt(), no_wait=True)
         # Config the mini buffer so that user commands can be processed
         self.stash.mini_buffer.config_runtime_callback(functools.partial(self.run, persistent_level=1))
@@ -386,6 +482,25 @@ class ShRuntime(object):
         self.stash.external_tab_handler = None
 
     def run_pipe_sequence(self, pipe_sequence, final_ins=None, final_outs=None, final_errs=None, environ={}, cwd=None):
+        """
+        Run a L{stash.system.shparsers.ShPipeSequence}.
+        
+        A pipe sequence is a linked sequence of commands.
+        
+        @param pipe_sequence: pipe sequence to run
+        @type pipe_sequence: L{stash.system.shparsers.ShPipeSequence}
+        @type final_ins: L{io.IOBase} or L{None}
+        @param final_outs: stdout for command
+        @type final_outs: L{io.IOBase} or L{None}
+        @param final_errs: stderr for command
+        @type final_errs: L{io.IOBase} or L{None}
+        @param environ: environment variables for script
+        @type environ L{dict}
+        @param cwd: CWD for command to run in
+        @type cwd: L{str} or L{None}
+        
+        @raises: L{stash.system.shcommon.ShNotExecutable}
+        """
         if self.debug:
             self.logger.debug(str(pipe_sequence))
 
@@ -503,6 +618,19 @@ class ShRuntime(object):
                     ins.close()
 
     def exec_py_file(self, filename, args=None, ins=None, outs=None, errs=None):
+        """
+        Execute a python file.
+        
+        @param filename: path of file to execute.
+        @type filename: L{str}
+        @param args: args to pass to script
+        @type args: L{list} of L{str} or L{None}
+        @type ins: L{io.IOBase} or L{None}
+        @param outs: stdout for command
+        @type outs: L{io.IOBase} or L{None}
+        @param errs: stderr for command
+        @type errs: L{io.IOBase} or L{None}
+        """
 
         _, current_state = self.get_current_worker_and_state()
 
@@ -573,6 +701,21 @@ class ShRuntime(object):
             os.environ = saved_os_environ
 
     def exec_sh_file(self, filename, args=None, ins=None, outs=None, errs=None, add_to_history=None):
+        """
+        Execute a shell file.
+        
+        @param filename: path of file to execute.
+        @type filename: L{str}
+        @param args: args to pass to script
+        @type args: L{list} of L{str} or L{None}
+        @type ins: L{io.IOBase} or L{None}
+        @param outs: stdout for command
+        @type outs: L{io.IOBase} or L{None}
+        @param errs: stderr for command
+        @type errs: L{io.IOBase} or L{None}
+        @param add_to_history: if True, add commands to history
+        @type add_to_history: L{bool} or L{None}
+        """
 
         _, current_state = self.get_current_worker_and_state()
 
@@ -616,6 +759,11 @@ class ShRuntime(object):
         """
         Convert an argv list into the appropiate string type depending
         on the currently used python version.
+        
+        @param argv: list of arguments to encode/convert
+        @type argv: list of L{str}
+        @return: list of the encoded arguments
+        @rtype: L{list} of L{str}
         """
         if PY3:
             # we need unicode argv
@@ -628,8 +776,9 @@ class ShRuntime(object):
     def get_prompt(self):
         """
         Get the prompt string. Fill with current working directory if required.
+        
         @return: the prompt
-        @rtype: str
+        @rtype: L{str}
         """
         _, current_state = self.get_current_worker_and_state()
 
@@ -657,8 +806,9 @@ class ShRuntime(object):
     def push_to_foreground(self, worker):
         """
         Push the specified worker to the foreground.
+        
         @param worker: worker to push to the foreground
-        @type worker: ShThread
+        @type worker: L{stash.system.shthreads.ShBaseThread}
         """
         worker.set_background(False)
         self.stash.mini_buffer.config_runtime_callback(None)
@@ -676,8 +826,9 @@ class ShRuntime(object):
     def get_current_worker_and_state(self):
         """
         Get the current thread and its associated state.
-        @return:
-        @rtype: (ShBaseThread, ShState)
+        
+        @return: the current thread and its associated state
+        @rtype: L{tuple} of (L{stash.system.shthreads.ShBaseThread}, L{stash.system.shthreads.ShState})
         """
         current_worker = threading.currentThread()
         if isinstance(current_worker, ShBaseThread):

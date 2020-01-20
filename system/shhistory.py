@@ -172,6 +172,7 @@ class ShHistory(object):
         @type tok:
         @return: last entry in history matching the search
         @rtype: L{str}
+        @raises: L{stash.system.shcommon.ShEventNotFound}
         """
         history = self.getlist()
         search_string = tok[1:]

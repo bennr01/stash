@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-StaSh - Pythonista Shell
+This module contains the core StaSh object.
 
 https://github.com/ywangd/stash
 
