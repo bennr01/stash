@@ -22,7 +22,37 @@ environ: {}
 
 
 class ShState(object):
-    """ State of the current worker thread
+    """
+    State of a current worker thread
+    
+    @ivar aliases: the aliases defined in the worker thread.
+    @type aliases: L{dict} of L{str}->L{str}
+    @ivar environ: environment variables of the worker thread
+    @type environ: L{dict} of L{str} -> L{str}
+    @ivar enclosed_cwd: cwd of the worker thread
+    @type enclosed_cwd: L{str}
+    @ivar sys_stdin: stdin of worker
+    @type sys_stdin: L{io.IOBase}
+    @ivar sys_stdout: stdout of worker
+    @type sys_stdout: L{io.IOBase}
+    @ivar sys_stderr: stderr of worker
+    @type sys_stderr: L{io.IOBase}
+    @ivar sys_stdin__: original stdin of worker
+    @type sys_stdin__: L{io.IOBase}
+    @ivar sys_stdout__: original stdout of worker
+    @type sys_stdout__: L{io.IOBase}
+    @ivar sys_stderr__: original stderr of worker
+    @type sys_stderr__: L{io.IOBase}
+    @ivar sys_path: L{sys.path} of the worker
+    @type sys_path: L{list} of L{str}
+    @ivar temporary_environ:
+    @type temporary_environ: L{dict} of L{str} -> L{str}
+    @ivar enclosing_aliases:
+    @type enclosing_aliases: L{dict} of L{str} -> L{str}
+    @ivar enclosing_environ:
+    @type enclosing_environ: L{dict} of L{str} -> L{str}
+    @ivar enclosing_cwd:
+    @type enclsoing_cwd: L{str}
     """
 
     def __init__(
@@ -35,7 +65,22 @@ class ShState(object):
             sys_stderr=None,
             sys_path=None
     ):
-
+        """
+        @param aliases: the aliases defined in the worker thread.
+        @type aliases: L{dict} of L{str}->L{str}
+        @param environ: environment variables of the worker thread
+        @type environ: L{dict} of L{str} -> L{str}
+        @param enclosed_cwd: cwd of the worker thread
+        @type enclosed_cwd: L{str}
+        @param sys_stdin: stdin of worker
+        @type sys_stdin: L{io.IOBase}
+        @param sys_stdout: stdout of worker
+        @type sys_stdout: L{io.IOBase}
+        @param sys_stderr: stderr of worker
+        @type sys_stderr: L{io.IOBase}
+        @param sys_path: L{sys.path} of the worker
+        @type sys_path: L{list} of L{str}
+        """
         self.aliases = aliases or {}
         self.environ = environ or {}
         self.enclosed_cwd = enclosed_cwd
@@ -65,22 +110,69 @@ class ShState(object):
 
     @property
     def return_value(self):
+        """
+        The exitcode of this thread.
+        
+        @return: the exitcode of this thread. Defaults to 0.
+        @rtype: L{int}
+        """
         return self.environ.get('?', 0)
 
     @return_value.setter
     def return_value(self, value):
+        """
+        The exitcode of this thread.
+        
+        @param value: new exitcode
+        @type value: L{int}
+        """
         self.environ['?'] = value
 
     def environ_get(self, name):
+        """
+        Get a value from the environment.
+        
+        @param name: name to get.
+        @type name: L{str}
+        @return: the value
+        @rtype: L{str}
+        """
         return self.environ[name]
 
     def environ_set(self, name, value):
+        """
+        Set a value of the environment.
+        
+        @param name: name to get.
+        @type name: L{str}
+        @param value: the value
+        @type value: L{str}
+        """
         self.environ[name] = value
 
     def persist_child(self, child_state, persistent_level=0):
         """
-        This is used to carry child shell state to its parent shell
-        @param ShState child_state: Child state
+        This is used to carry child shell state to its parent shell.
+        
+        @param child_state: Child state
+        @type child_state: L{ShState}
+        @param persistent_level:
+        The persistent level dictates how variables from child worker
+        shall be carried over to the parent shell/worker.
+        
+        Possible values are:
+        
+        C{0}: No persistent at all (shell script is by default in this mode)
+        
+        
+        C{1}: Full persistent. Parent's variables will be the same as child's
+        (User command from terminal is in this mode).
+        
+        C{2}: Semi persistent. Any more future children will have starting
+        variables as the current child's ending variables. (__call__
+        interface is by default in this mode).
+        
+        @type persistent_level: L{int}
         """
         if persistent_level == 0:
             # restore old state
@@ -111,8 +203,11 @@ class ShState(object):
         """
         Create new state from parent state. Parent's enclosing environ are merged as
         part of child's environ
-        @param ShState parent_state: Parent state
-        @return:
+        
+        @param parent_state: Parent state
+        @type parent_state: L{ShState}
+        @return: the new state
+        @rtye: L{ShState}
         """
 
         if parent_state.enclosing_aliases:
@@ -141,8 +236,12 @@ class ShState(object):
 
 
 class ShWorkerRegistry(object):
-    """ Bookkeeping for all worker threads (both foreground and background).
+    """
+    Bookkeeping for all worker threads (both foreground and background).
     This is useful to provide an overview of all running threads.
+    
+    @ivar registry: a dict mapping the worker IDs to the workers
+    @type registry: L{collections.OrderedDict} of L{int} -> L{ShBaseThread}
     """
 
     def __init__(self):
@@ -175,16 +274,42 @@ class ShWorkerRegistry(object):
             self._lock.release()
 
     def add_worker(self, worker):
+        """
+        Add a worker to the registry and set the job ID of the worker.
+        
+        @param worker: worker to add
+        @type worker: L{ShBaseThread}
+        """
         worker.job_id = self._get_job_id()
         self.registry[worker.job_id] = worker
 
     def remove_worker(self, worker):
+        """
+        Remove a previously added worker from this registry.
+        
+        @param worker: worker to remove
+        @type worker: L{ShBaseThread}
+        """
         self.registry.pop(worker.job_id)
 
     def get_worker(self, job_id):
+        """
+        Get the worker with the specified job ID.
+        
+        @param job_id: id of worker to get
+        @type job_id: L{int}
+        @return: the worker or L{None}
+        @rtype: L{ShBaseThread} or L{None}
+        """
         return self.registry.get(job_id, None)
 
     def get_first_bg_worker(self):
+        """
+        Return the first worker running in background.
+        
+        @return: a worker running in background or L{None}
+        @rtype: L{ShBaseThread} or L{None}
+        """
         for worker in self.registry.values():
             if worker.is_background:
                 return worker
@@ -194,7 +319,6 @@ class ShWorkerRegistry(object):
     def purge(self):
         """
         Kill all registered thread and clear the entire registry
-        @return:
         """
         for worker in self.registry.values():
             worker.kill()
@@ -202,7 +326,32 @@ class ShWorkerRegistry(object):
 
 
 class ShBaseThread(threading.Thread):
-    """ The basic Thread class provides life cycle management.
+    """
+    The basic Thread class provides life cycle management.
+    
+    @cvar CREATED: symbolic constant indicating the state of this thread.
+    @type CREATED: L{int}
+    @cvar STARTED: symbolic constant indicating the state of this thread.
+    @type STARTED: L{int}
+    @cvar STOPPED: symbolic constant indicating the state of this thread.
+    @type STOPPED: L{int}
+    
+    @ivar registry: the registry responsible for managing this worker
+    @type registry: L{ShWorkerRegistry}
+    @ivar job_id: the job ID of this worker (None if not yet set)
+    @type job_id: L{int} or L{None}
+    @ivar command: the command that this thread runs
+    @type command: L{str}
+    @ivar parent: the parent worker or runtime
+    @type parent: L{ShBaseThread} or L{stash.system.shruntime.ShRuntime}
+    @ivar state: the state of this thread.
+    @type state: L{ShState}
+    @ivar killed: if True, this thread has been killed.
+    @type killed: L{bool}
+    @ivar killer: the job ID of the killer of this thread. Defaults to 0
+    @type killer: L{int}
+    @param child_thread: current foreground child thread
+    @type child_thread: L{ShBaseThread} or L{None}
     """
 
     CREATED = 1
@@ -210,6 +359,24 @@ class ShBaseThread(threading.Thread):
     STOPPED = 3
 
     def __init__(self, registry, parent, command, target=None, is_background=False, environ={}, cwd=None):
+        """
+        @param registry: the registry responsible for managing this worker
+        @type registry: L{ShWorkerRegistry}
+        @param command: the command that this thread runs
+        @type command: L{str}
+        @param parent: the parent worker or runtime
+        @type parent: L{ShBaseThread} or L{stash.system.shruntime.ShRuntime}
+        @param target: function to execute
+        @type target: callable
+        @param is_background: if True, switch to background
+        @type is_background: L{bool}
+        @param name: the name of this thread.
+        @type name: L{str}
+        @param environ: environment variables of this worker
+        @type environ: L{dict} of L{str} -> L{str}
+        @param cwd: CWD of this worker
+        @type cwd: L{str}
+        """
         super(ShBaseThread, self).__init__(group=None, target=target, name='_shthread', args=(), kwargs=None)
 
         # Registry management
@@ -253,7 +420,12 @@ class ShBaseThread(threading.Thread):
     def status(self):
         """
         Status of the thread. Created, Started or Stopped.
+        
+        
+        @return: the status (started/stopped/created) of this thread
+        @rtype: one of the symbolic constants (L{int})
         """
+        
         # STATES
         # isAlive() | self.ident  | Meaning
         # ----------+-------------+--------
@@ -261,6 +433,7 @@ class ShBaseThread(threading.Thread):
         # False     | not None    | stopped
         # True      |     None    | impossible
         # True      | not None    | running
+        
         if self.isAlive():
             return self.STARTED
         elif (not self.is_alive()) and (self.ident is not None):
@@ -269,6 +442,13 @@ class ShBaseThread(threading.Thread):
             return self.CREATED
 
     def set_background(self, is_background=True):
+        """
+        Push this thread into the background or into the foreground.
+        
+        @param is_background: if True, push into background. If false, 
+        push into foreground
+        @type is_background: L{bool}
+        """
         self.is_background = is_background
         if is_background:
             if self.parent.child_thread is self:
@@ -281,6 +461,9 @@ class ShBaseThread(threading.Thread):
         """
         Whether or not the thread is directly under the runtime, aka top level.
         A top level thread has the runtime as its parent
+        
+        @return: whether this is a toplevel worker or not
+        @rtype: L{bool}
         """
         return not isinstance(self.parent, ShBaseThread) and not self.is_background
 
@@ -308,7 +491,12 @@ class ShBaseThread(threading.Thread):
 
 # noinspection PyAttributeOutsideInit
 class ShTracedThread(ShBaseThread):
-    """ Killable thread implementation with trace """
+    """
+    Killable thread implementation with trace.
+    
+    This works with almost every python version, but it has performance
+    drawbacks.
+    """
 
     def __init__(self, registry, parent, command, target=None, is_background=False, environ={}, cwd=None):
         super(ShTracedThread,
@@ -335,9 +523,38 @@ class ShTracedThread(ShBaseThread):
         self.run = self.__run_backup
 
     def globaltrace(self, frame, why, arg):
+        """
+        Function for the globaltrace.
+        
+        We use this function for the L{kill}() mechanism.
+        
+        @param frame: current stack frame
+        @type frame: L{types.FrameType}
+        @param why: reason for the call of this method/function.
+        @type why: L{str}
+        @param arg: depends on the event type
+        @type arg: depends on the event type
+        @return: a function to use for tracing the new scope or None
+        @rtype: L{types.MethodType} or L{types.FunctionType} or L{None}
+        """
         return self.localtrace if why == 'call' else None
 
     def localtrace(self, frame, why, arg):
+        """
+        Function for the localtrace.
+        
+        We use this function for the L{kill}() mechanism.
+        
+        @param frame: current stack frame
+        @type frame: L{types.FrameType}
+        @param why: reason for the call of this method/function.
+        @type why: L{str}
+        @param arg: depends on the event type
+        @type arg: depends on the event type
+        @return: a function to use for tracing the new scope or None
+        @rtype: L{types.MethodType} or L{types.FunctionType} or L{None}
+        @raises: L{KeyboardInterrupt}
+        """
         if self.killed:
             if why == 'line':
                 if self.child_thread:
@@ -346,6 +563,9 @@ class ShTracedThread(ShBaseThread):
         return self.localtrace
 
     def kill(self):
+        """
+        Kill this thread.
+        """
         if not self.killed:
             self.killed = True
             self.on_kill()
@@ -355,6 +575,9 @@ class ShCtypesThread(ShBaseThread):
     """
     A thread class that supports raising exception in the thread from
     another thread (with ctypes).
+    
+    This thread type has supperior performance compared to L{ShTracedThread},
+    but suffers from compatibility problems.
     """
 
     def __init__(self, registry, parent, command, target=None, is_background=False, environ={}, cwd=None):
@@ -370,6 +593,12 @@ class ShCtypesThread(ShBaseThread):
               )
 
     def _async_raise(self):
+        """
+        Raises a KeyboardInterrupt in this thread.
+        
+        @raises: L{ValueError}
+        @raises: L{SystemError}
+        """
         tid = self.ident
         res = python_capi.PyThreadState_SetAsyncExc(ctypes.c_long(tid) if M_64 else tid, ctypes.py_object(KeyboardInterrupt))
         if res == 0:
@@ -383,6 +612,9 @@ class ShCtypesThread(ShBaseThread):
         return res
 
     def kill(self):
+        """
+        Kill this thread.
+        """
         if not self.killed:
             self.killed = True
             if self.child_thread:

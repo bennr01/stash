@@ -18,6 +18,28 @@ class ShMiniBuffer(object):
     """
     This class process user inputs (as opposed to running scripts I/O). It is
     called by the UI delegate to process the text_view_should_change event.
+    
+    @cvar RANGE_BUFFER_END: a symbolic constant.
+    @type RANGE_BUFFER_END: L{str}
+    @cvar RANGE_MODIFIABLE_CHARS: a symbolic constant.
+    @type RANGE_MODIFIABLE_CHARS: L{str}
+    @cvar RANGE_CURSOR_TO_END: a symbolic constant.
+    @type RANGE_CURSOR_TO_END: L{str}
+    
+    @ivar stash: the parent StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar main_screen: StaSh's main screen
+    @type main_screen: L{stash.system.shscreens.ShSequentialScreen}
+    @ivar debug: if True, log debug information
+    @type debug: L{bool}
+    @ivar logger: the logger of this minibuffer
+    @type logger: L{logging.Logger}
+    @ivar chars: buffer that holds incoming chars from user
+    @type chars: L{str}
+    @ivar runtime_callback:
+    @type runtime_callback: callable
+    @ivar cbreak: cbreak mode, process char by char. NOT IMPLEMENTED
+    @type cbreak: L{bool}
     """
 
     RANGE_BUFFER_END = 'RANGE_BUFFER_END'
@@ -25,8 +47,15 @@ class ShMiniBuffer(object):
     RANGE_CURSOR_TO_END = 'RANGE_CURSOR_TO_END'
 
     def __init__(self, stash, main_screen, debug=False):
+        """
+        @param stash: the parent StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param main_screen: StaSh's main screen
+        @type main_screen: L{stash.system.shscreens.ShSequentialScreen}
+        @param debug: if True, log debug information
+        @type debug: L{bool}
+        """
         self.stash = stash
-        """@type : StaSh"""
 
         self.main_screen = main_screen
         self.debug = debug
@@ -45,7 +74,9 @@ class ShMiniBuffer(object):
         The index where chars start to be modifiable. Modifiable chars are
         those input text that can still be edited by users. Any characters
         before a linebreak is not modifiable.
-        @rtype: int
+        
+        @return: The index where chars start to be modifiable.
+        @rtype: L{int}
         """
         idx = self.chars.rfind('\n')
         return idx + 1 if idx != -1 else 0
@@ -53,14 +84,20 @@ class ShMiniBuffer(object):
     @property
     def modifiable_string(self):
         """
-        @rtype: str: modifiable characters
+        The modifiable characters.
+        
+        @return: modifiable characters
+        @rtype: L{str}
         """
         return self.chars[self.x_modifiable:]
 
     @modifiable_string.setter
     def modifiable_string(self, value):
         """
-        @param str value: New value for the modifiable chars
+        Set the modifiable characters.
+        
+        @param value: New value for the modifiable chars
+        @type value: L{str}
         """
         self.chars = self.chars[:self.x_modifiable] + value
 
@@ -69,9 +106,10 @@ class ShMiniBuffer(object):
         Directly called by a TextView delegate to replace existing chars
         in given range with the given new chars.
 
-        @param (int, int) | None | str rng: the range of selected chars
-        @param str replacement: new chars
-        @return:
+        @param  rng: the range of selected chars
+        @type rng: L{tuple} of (L{int}, L{int}) or L{None} or L{str}
+        @param replacement: new chars
+        @type replacement: str
         """
 
         if rng is None or rng == self.RANGE_MODIFIABLE_CHARS:
@@ -202,8 +240,20 @@ class ShMiniBuffer(object):
     def set_cursor(self, offset, whence=0):
         """
         Set cursor within the modifiable range.
+        
         @param offset:
-        @param whence:
+        @type offset: L{int}
+        @param whence: relative to what
+        
+        Possible values:
+        
+        C{1}: from current position
+        
+        C{2}: from the end
+        
+        other: default from start
+        
+        @type whence: L{int}
         """
         # Lock the main_screen for modification
         with self.main_screen.acquire_lock():
@@ -231,8 +281,13 @@ class ShMiniBuffer(object):
     def sync_cursor(self, selected_range):
         """
         Enforce the main screen cursor position to be the same as what it
-        is shown on the terminal (TextView). This is mainly used for when
+        is shown on the terminal (TextView).
+        
+        This is mainly used for when
         user touch and change the cursor position/selection.
+        
+        @param selected_range: the current selected range to sync.
+        @type seleced_range: L{tuple} of (L{int}, L{int})
         """
         with self.main_screen.acquire_lock(blocking=False) as locked:
             if locked:
@@ -242,6 +297,15 @@ class ShMiniBuffer(object):
             # threads anyway).
 
     def delete_word(self, rng):
+        """
+        Delete characters in the specified range.
+        
+        This method ensures that only the modifiable part of the range
+        will be deleted.
+        
+        @param rng: range to delete
+        @type rng: L{tuple} of (L{int}, L{int})
+        """
         if rng[0] != rng[1]:  # do nothing if there is any selection
             return
 
@@ -263,8 +327,10 @@ class ShMiniBuffer(object):
         Convert the incoming range (by user) to values relative to the
         input buffer text. Also enforce the modifiable bound.
 
-        @param (int, int) rng: range of selected text
-        @return: (int, int): Adjusted range
+        @param rng: range of selected text
+        @type rng: L{tuple} of (L{int}, L{int})
+        @return: Adjusted range
+        @rtype: L{tuple} of (L{int}, L{int})
         """
         terminal = self.stash.terminal
         tv_text = terminal.text  # existing text from the terminal
@@ -314,15 +380,49 @@ class ShMiniBuffer(object):
             self.main_screen.modifiable_string = self.modifiable_string
 
     def config_runtime_callback(self, callback):
+        """
+        Set the runtime callback.
+        
+        :param callback: the new runtime callback
+        :type callback: callable
+        """
         self.runtime_callback = callback
 
 
 class ShStream(object):
     """
-    This class is to process I/O from running scripts (as opposed to user input).
+    This class is used to process I/O from running scripts (as opposed to user input).
 
     A stream is a state machine that parses a stream of characters
     and dispatches events based on what it sees.
+    
+    @cvar basic: the control sequences, which don't require any arguments
+    @type basic: L{dict} of L{str} -> L{str}
+    @cvar csi: CSI escape sequences
+    @type csi: L{dict} of L{str} -> L{str}
+    @cvar STATE_STREAM: symbolic constant for state machine
+    @type STATE_STREAM: L{int}
+    @cvar STATE_ESCAPE: symbolic constant for state machine
+    @type STATE_ESCAPE: L{int}
+    @cvar STATE_ARGUMENTS: symbolic constant for state machine
+    @type STATE_ARGUMENTS: L{int}
+    
+    @ivar consume_handlers: handlers for consuming the input
+    @type consume_handlers: L{tuple} of (callable, ...)
+    @ivar stash: the parent StaSh instance
+    @type stash: L{stash.core.StaSh}
+    @ivar main_screen: StaSh's main screen
+    @type main_screen: L{stash.system.shscreens.ShSequentialScreen}
+    @ivar debug: if True, log debug informations
+    @type debug: L{bool}
+    @ivar logger: this streams logger
+    @type logger: L{logging.Logger}
+    @ivar state: the current state
+    @type state: one of the STATE_* constants
+    @ivar params: arguments for current CSI sequence
+    @type params: L{list} of L{int}
+    @ivar current: current CSI sequence
+    @type current: L{str}
     """
 
     #: Control sequences, which don't require any arguments
@@ -344,6 +444,14 @@ class ShStream(object):
     STATE_ARGUMENTS = 2
 
     def __init__(self, stash, main_screen, debug=False):
+        """
+        @param stash: the parent StaSh instance
+        @type stash: L{stash.core.StaSh}
+        @param main_screen: StaSh's main screen
+        @type main_screen: L{stash.system.shscreens.ShSequentialScreen}
+        @param debug: if True, log debug informations
+        @type debug: L{bool}
+        """
 
         self.consume_handlers = (self._stream, self._escape, self._arguments)
 
@@ -362,10 +470,12 @@ class ShStream(object):
         self.current = ''
 
     def consume(self, char):
-        """Consumes a single string character and advance the state as
+        """
+        Consumes a single string character and advance the state as
         necessary.
 
-        @param str char: a character to consume.
+        @param char: a character to consume.
+        @type char: L{str}
         """
         try:
             self.consume_handlers[self.state](char)
@@ -373,9 +483,11 @@ class ShStream(object):
             self.reset()
 
     def feed(self, chars, render_it=True, no_wait=False):
-        """Consumes a string and advance the state as necessary.
+        """
+        Consumes a string and advance the state as necessary.
 
-        @param str chars: a string to feed from.
+        @param chars: a string to feed from.
+        @type chars: L{str}
         """
         # To avoid the \xc2 deadlock from bytes string
         if not isinstance(chars, six.text_type):
@@ -389,13 +501,16 @@ class ShStream(object):
             self.stash.renderer.render(no_wait=no_wait)
 
     def dispatch(self, event, *args, **kwargs):
-        """Dispatches an event.
+        """
+        Dispatches an event.
 
-           If any of the attached listeners throws an exception, the
-           subsequent callbacks are be aborted.
+        If any of the attached listeners throws an exception, the
+        subsequent callbacks will be aborted.
 
-        @param str event: event to dispatch.
-        @param list args: arguments to pass to event handlers.
+        @param event: event to dispatch.
+        @type event: str
+        @param args: arguments to pass to event handlers.
+        @type args: L{list}
         """
 
         # noinspection PyCallingNonCallable
@@ -409,7 +524,12 @@ class ShStream(object):
             self.reset()
 
     def _stream(self, char):
-        """Processes a character when in the default ``"stream"`` state."""
+        """
+        Processes a character when in the default ``"stream"`` state.
+        
+        @param char: character to process
+        @type char: L{str}
+        """
         if char in self.basic:
             self.dispatch(self.basic[char])
 
@@ -423,7 +543,11 @@ class ShStream(object):
             self.state = self.STATE_ARGUMENTS
 
     def _escape(self, char):
-        """Handles characters seen when in an escape sequence.
+        """
+        Handles characters seen when in an escape sequence.
+        
+        @param char: character to process
+        @type char: L{str}
         """
         if char == '[':
             self.state = self.STATE_ARGUMENTS
@@ -431,12 +555,16 @@ class ShStream(object):
             self.dispatch('draw', char)
 
     def _arguments(self, char):
-        """Parses arguments of a CSI sequence.
+        """
+        Parses arguments of a CSI sequence.
 
         All parameters are unsigned, positive decimal integers, with
         the most significant digit sent first. Any parameter greater
         than 9999 is set to 9999. If you do not specify a value, a 0
         value is assumed.
+        
+        @param char: character to process
+        @type char: L{str}
         """
         if char.isdigit():
             self.current += char
