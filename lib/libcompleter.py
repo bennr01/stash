@@ -1,4 +1,44 @@
 # -*- coding: utf-8 -*-
+"""
+Advanced command completion.
+
+This module holds information about semantical useful completion candidates.
+
+For example, it stores the information that "git" has "branch" as a possible
+completion for the first argument.
+
+The core of this module is the L{_subcmd_cfg}, which holds the completion
+informations. Direct access is discouraged, instead use the L{subcmd_complete}
+function.
+
+@var _subcmd_cfg:
+The completion information.
+
+Format:
+
+command_name (L{str}) -> completions (L{dict})
+
+completions: pos (L{str}) -> options (L{dict})
+
+Where:
+
+"command_name" is the name of the command to complete
+
+"pos" is a string (either number or "-") indicating the position of arg
+to complete.
+
+"options" is a dict with various options:
+
+C{"candidates"}: completion candidates (L{list} of L{str})
+
+C{"blank_completion"}: if True, complete empty inputs
+
+C{"with_normal_completion"}: if True, also offer filename completion.
+
+
+@type _subcmd_cfg: L{dict}. See above for format.
+"""
+
 import os
 import json
 
@@ -227,6 +267,14 @@ def _select_from_candidate_groups(candidate_groups, tok, after=None):
 
 
 def subcmd_complete(toks):
+    """
+    Comple a subcommand.
+    
+    @param toks: user input to complete
+    @type toks: L{list} of L{str}
+    @return: a tuple of (candidates, with_normal_completion)
+    @rtype: L{tuple} of (L{list} of L{str}, L{bool}) or L{tuple} of (L{None}, L{None}).
+    """
     # Only one token, this is still command, not sub-command yet
     if len(toks) == 1:
         return None, None

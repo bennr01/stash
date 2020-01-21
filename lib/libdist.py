@@ -1,5 +1,20 @@
 """
-OS/device specific interfaces
+OS/device specific interfaces.
+
+@var IN_PYTHONISTA: True if running in Pythonista.
+@type IN_PYTHONISTA: L{bool}
+@var ON_TRAVIS: True if running on Travis CI.
+@type ON_TRAVIS: L{bool}
+
+@var SITE_PACKAGES_FOLDER: path to the directoy in which pip will
+install modules into.
+@type SITE_PACKAGES_FOLDER: L{str}
+@var SITE_PACKAGES_FOLDER_6: like L{SITE_PACKAGES_FOLDER}, but shared
+between py2 and py3.
+@type SITE_PACKAGES_FOLDER_6: L{str}
+@var BUNDLED_MODULES: list of bundled modules. L{pip} will skip
+installing these modules/packages.
+@type BUNDLED_MODULES: L{list} of L{str}
 """
 import os
 import sys
@@ -20,16 +35,18 @@ if IN_PYTHONISTA:
     def clipboard_get():
         """
         Get the clipboard content.
+        
         @return: clipboard content
-        @rtype: six.text_type
+        @rtype: L{six.text_type}
         """
         return clipboard.get()
     
     def clipboard_set(s):
         """
         Set the clipboard content.
+        
         @param s: string to set
-        @type s: six.text_type
+        @type s: L{six.text_type}
         """
         # TODO: non-unicode support
         assert isinstance(s, six.text_type)
@@ -104,8 +121,9 @@ if IN_PYTHONISTA:
         """
         Open a file in another application.
         If possible, let the user decide the application
+        
         @param path: path to file
-        @type path: str
+        @type path: L{str}
         """
         console.open_in(path)
     
@@ -113,8 +131,9 @@ if IN_PYTHONISTA:
     def quicklook(path):
         """
         Show a preview of the file.
+        
         @param path: path to file
-        @type path: str
+        @type path: L{str}
         """
         console.quicklook(path)
         
@@ -130,16 +149,18 @@ else:
         def clipboard_get():
             """
             Get the clipboard content.
+            
             @return: clipboard content
-            @rtype: six.text_type
+            @rtype: L{six.text_type}
             """
             return pyperclip.paste()
         
         def clipboard_set(s):
             """
             Set the clipboard content.
+            
             @param s: string to set
-            @type s: six.text_type
+            @type s: L{six.text_type}
             """
             # TODO: non-unicode support
             assert isinstance(s, six.text_type)
@@ -151,16 +172,18 @@ else:
         def clipboard_get():
             """
             Get the clipboard content.
+            
             @return: clipboard content
-            @rtype: six.text_type
+            @rtype: L{six.text_type}
             """
             return _CLIPBOARD
         
         def clipboard_set(s):
             """
             Set the clipboard content.
+            
             @param s: string to set
-            @type s: six.text_type
+            @type s: L{six.text_type}
             """
             global _CLIPBOARD
             assert isinstance(s, six.text_type)
@@ -189,15 +212,17 @@ else:
         """
         Open a file in another application.
         If possible, let the user decide the application
+        
         @param path: path to file
-        @type path: str
+        @type path: L{str}
         """
         webbrowser.open(path, new=1)
     
     def quicklook(path):
         """
         Show a preview of the file.
+        
         @param path: path to file
-        @type path: str
+        @type path: L{str}
         """
         webbrowser.open(path, new=1)

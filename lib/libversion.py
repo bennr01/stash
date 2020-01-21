@@ -1,28 +1,33 @@
 # -*- coding: utf-8 -*-
-"""version utilities"""
+"""
+Version utilities.
+"""
 import re
 import operator
 
 # release type identifier -> release type priority (higher == better)
-RELEASE_TYPE_PRIORITIES = {
-    None: 4,   # no release type
-    "a": 1,    # alpha post release
-    "b": 2,    # beta post release
-    "rc": 3,   # release candidate
-    "post": 5,  # post release
-    "dev": 0,   # dev release
-}
+#RELEASE_TYPE_PRIORITIES = {
+#    None: 4,   # no release type
+#    "a": 1,    # alpha post release
+#    "b": 2,    # beta post release
+#    "rc": 3,   # release candidate
+#    "post": 5,  # post release
+#    "dev": 0,   # dev release
+#}
 
 
 def _parse_version(vs):
     """
-    Parse a version string, e.g. '2!3.0.1.rc2.dev3'
+    Parse a version string, e.g. '2!3.0.1.rc2.dev3' according to PEP440.
+    
     @param vs: version to parse
-    @type vs: str
+    @type vs: L{str}
     @return: a dict containing the fragments about the version
-    @rtype: dict
+    @rtype: L{dict}
     """
-    # NOTE: the below code may be a bit messy, because it was rewritten multiple times and then repurposed from a sort-function to a parsing-function
+    # NOTE: the below code may be a bit messy, because it was rewritten
+    # multiple times and then repurposed from a sort-function to a
+    # parsing-function
     # version scheme (PEP440): [N!]N(.N)*[{a|b|rc}N][.postN][.devN]
     # convert to lowercase, since all versions must be case insenstive (PEP440)
     e = vs.lower()
@@ -112,10 +117,11 @@ def _parse_version(vs):
 def sort_versions(versionlist):
     """
     Return a list containing the versions in versionlist, starting with the highest version.
+    
     @param versionlist: list of versions to sort
-    @type versionlist: list of str
+    @type versionlist: L{list} of L{str}
     @return: the sorted list
-    @rtype: list of str
+    @rtype: L{list} of L{str}
     """
     return sorted(versionlist, key=lambda s: Version.parse(s) if isinstance(s, str) else s, reverse=True)
 
@@ -123,6 +129,34 @@ def sort_versions(versionlist):
 class Version(object):
     """
     This class represents a version. It is mainly used for version comparsion.
+    
+    @cvar TYPE_NORMAL: symbolic constant for marking normal releases
+    @type TYPE_NORMAL: L{None}
+    @cvar TYPE_ALPHA: symbolic constant for marking alpha releases
+    @type TYPE_ALPHA: L{None}
+    @cvar TYPE_BETA: symbolic constant for marking beta releases
+    @type TYPE_BETA: L{None}
+    @cvar TYPE_RELEASE_CANDIDATE: symbolic constant for marking release
+    candidates
+    
+    @type TYPE_RELEASE_CANDIDATE: L{None}
+    @cvar RELEASE_TYPE_PRIORITIES: this dict maps the release type to
+    it's installation priority. higher priority is better.
+    @type RELEASE_TYPE_PRIORITIES: L{dict} of one of the
+    L{Version}.TYPE_ constants -> L{int}
+    
+    @ivar epoch: epoch segment of the version
+    @type epoch: L{int}
+    @ivar versiontuple: the parts of the numeric version
+    @type versiontuple: L{tuple} of L{int}
+    @ivar rtype: type of the release
+    @type rtype: one of the L{Version}.TYPE_* constants
+    @ivar subversion: pre release number
+    @type subversion: L{int}
+    @ivar postrelease: post release number
+    @type postrelease: L{int}
+    @ivar devrelease: development release number
+    @type devrelease: L{int}
     """
     TYPE_NORMAL = None
     TYPE_ALPHA = "a"
@@ -130,7 +164,7 @@ class Version(object):
     TYPE_RELEASE_CANDIDATE = "rc"
 
     RELEASE_TYPE_PRIORITIES = {
-        # priority of a release type. greate => higher priority
+        # priority of a release type. greater => higher priority
         TYPE_NORMAL: 3,   # no release type
         TYPE_ALPHA: 0,    # alpha post release
         TYPE_BETA: 1,    # beta post release
@@ -138,6 +172,20 @@ class Version(object):
     }
 
     def __init__(self, epoch=0, versiontuple=(), rtype=None, subversion=0, postrelease=None, devrelease=None):
+        """
+        @param epoch: epoch segment of the version
+        @type epoch: L{int}
+        @param versiontuple: the parts of the numeric version
+        @type versiontuple: L{tuple} of L{int}
+        @param rtype: type of the release
+        @type rtype: one of the L{Version}.TYPE_* constants
+        @param subversion: pre release number
+        @type subversion: L{int}
+        @param postrelease: post release number
+        @type postrelease: L{int}
+        @param devrelease: development release number
+        @type devrelease: L{int}
+        """
         assert isinstance(epoch, int)
         assert isinstance(versiontuple, tuple)
         assert isinstance(rtype, str) or rtype is None
@@ -154,11 +202,12 @@ class Version(object):
     @classmethod
     def parse(cls, s):
         """
-        Parse a versionstring and return a Version() of it.
+        Parse a versionstring and return a L{Version} of it.
+        
         @param s: string to parse
-        @type s: str
-        @return: a Version() instance describing the parsed string
-        @rtype: Version
+        @type s: L{str}
+        @return: a L{Version} instance describing the parsed string
+        @rtype: L{Version}
         """
         if isinstance(s, cls):
             # s is already a Version
@@ -168,27 +217,38 @@ class Version(object):
 
     @property
     def is_postrelease(self):
-        """whether this version is a postrelease or not"""
+        """
+        Whether this version is a postrelease or not.
+        """
         return self.postrelease is not None
 
     @property
     def is_devrelease(self):
-        """whether this version is a devrelease or not"""
+        """
+        Whether this version is a devrelease or not.
+        """
         return self.devrelease is not None
 
     def _get_sortkey(self):
         """
         Return a value which can be used to compare two versions.
+        
         Sort order:
-        1. epoch
-        2. release version
-        3. postrelease > release > prerelease
-        4. postrelease#
-        5. non-dev > dev
-        6. dev#
+        
+        1: epoch
+        
+        2: release version
+        
+        3: postrelease > release > prerelease
+        
+        4: postrelease number
+        
+        5: non-dev > dev
+        
+        6: dev number
 
         @return: a value which can be used for comparing this version to another version
-        @rtype: tuple
+        @rtype: L{tuple}
         """
         rpriority = self.RELEASE_TYPE_PRIORITIES.get(self.rtype, 0)
         return (
@@ -233,7 +293,12 @@ class Version(object):
             return False
 
     def __str__(self):
-        """return a string representation of this version"""
+        """
+        Return a string representation of this version.
+        
+        @return: a string representation of this object.
+        @rtype: L{str}
+        """
         version = ".".join([str(e) for e in self.versiontuple])  # base version
         # epoch
         if self.epoch > 0:
@@ -259,7 +324,17 @@ class Version(object):
 
 class VersionSpecifier(object):
     """
-    This class is to represent the versions of a requirement, e.g. pyte==0.4.10.
+    This class is used to represent the versions of a requirement,
+    e.g. pyte==0.4.10.
+    
+    @cvar OPS: a dict of operator name -> operator function
+    @type OPS: L{dict} of L{str} -> L{types.FunctionType}
+    
+    @ivar specs: the specifications, e.g. <= 1.2.3
+    @type specs: L{list} of L{tuple} of (L{types.FunctionType},
+    L{Version} or L{str})
+    @ivar str: a string representation of this object
+    @type str: L{str}
     """
     OPS = {
         '<=': operator.le,
@@ -272,6 +347,10 @@ class VersionSpecifier(object):
     }
 
     def __init__(self, version_specs):
+        """
+        @param version_specs: the specifications, e.g. <= 1.2.3
+        @type version_specs: L{list} of L{tuple} of (L{str}, L{Version} or L{str})
+        """
         self.specs = [(VersionSpecifier.OPS[op], version) for (op, version) in version_specs]
         self.str = str(version_specs)
 
@@ -282,10 +361,12 @@ class VersionSpecifier(object):
     def parse_requirement(requirement):
         """
         Factory method to create a VersionSpecifier object from a requirement
+        
         @param requirement: requirement to parse
-        @type requirement: str
+        @type requirement: L{str}
         @return: tuple of (requirement_name, version_specifier, list of extras)
-        @rtype: tuple of (str, VersionSpecifier, list of str)
+        @rtype: L{tuple} of (L{str} or L{None}, L{VersionSpecifier} or
+        L{None}, L{list} of L{str})
         """
         if isinstance(requirement, (list, tuple)):
             if len(requirement) == 1:
@@ -337,10 +418,11 @@ class VersionSpecifier(object):
     def match(self, version):
         """
         Check if version is allowed by the version specifiers.
+        
         @param version: version to check
-        @type version: str
+        @type version: L{str}
         @return: whether the version is allowed or not
-        @rtype: boolean
+        @rtype: L{bool}
         """
         # return all([op(Version.parse(version), Version.parse(ver)) for op, ver in self.specs])
         matches = True
