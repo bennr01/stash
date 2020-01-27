@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-"""dropbox utilities."""
+"""
+Dropbox utilities.
+
+This module does not yet support cross-platform.
+
+@var DB_SERVICE: name of dropbox service for account storage
+@type DB_SERVICE: L{str}
+"""
 import sys
 import base64
 import pickle
@@ -15,7 +22,19 @@ DB_SERVICE = "DropBox"
 
 
 def dropbox_setup(username, stdin, stdout):
-    """helper-interface to setup dropbox."""
+    """
+    Helper-interface to setup dropbox.
+    
+    @param username: username to setup for
+    @type username: L{str}
+    @param stdin: stdin to read from
+    @type stdin: L{io.IOBase}
+    @param stdout: stdout to write to
+    @type stdout: L{io.IOBase}
+    @return: True on success
+    @rtype: L{bool}
+    @raises: L{KeyboardInterrupt}
+    """
     _stash = core.get_stash()
     Text = _stash.text_color  # alias
     stdout.write(Text("=" * 40 + "\nDropbox-setup\n" + "=" * 25 + "\n", "blue"))
@@ -74,7 +93,14 @@ def dropbox_setup(username, stdin, stdout):
 
 
 def save_dropbox_data(username, access_token):
-    """saves dropbox access information for username."""
+    """
+    Save dropbox access information for username.
+    
+    @param username: username to save for
+    @type username: L{str}
+    @param access_token: access token for dropbox
+    @type access_token: ?
+    """
     data = {
         "api_version": 2,
         "access_token": access_token,
@@ -85,7 +111,14 @@ def save_dropbox_data(username, access_token):
 
 
 def load_dropbox_data(username):
-    """load dropbox access information for username."""
+    """
+    Load dropbox access information for username.
+    
+    @param username: username to load dropbox access info for
+    @type username: L{str}
+    @return: the loaded dropbox access info
+    @rtype: ?
+    """
     encoded = keychain.get_password(DB_SERVICE, username)
     if encoded is None:
         return None
@@ -96,12 +129,20 @@ def load_dropbox_data(username):
 
 def get_dropbox_client(username, setup=True, stdin=None, stdout=None):
     """
-	checks wether a dropbox.dropbox.Dropbox is available for username.
-	If it is, it is returned.
-	Otherwise, if setup is True, a command-line setup is shown.
-	The setup uses stdin and stout, both defaulting to the sys.std*.
-	If no client was found and setup is False, None will be returned.
-	"""
+    Check wether a L{dropbox.dropbox.Dropbox} is available for username.
+    
+    If it is, it is returned.
+    Otherwise, if setup is True, a command-line setup is shown.
+    The setup uses stdin and stout, both defaulting to the sys.std*.
+    If no client was found and setup is False, None will be returned.
+    
+    @param username: username to check
+    @type username: L{str}
+    @param setup: if True and no dropbox is available, call L{dropbox_setup}.
+    @type setup: L{bool}
+    @return: a dropbox client or None
+    @rtype: L{dropbox.dropbox.Dropbox} or L{None}
+    """
     if stdout is None:
         stdout = sys.stdout
     if stdin is None:
@@ -119,7 +160,12 @@ def get_dropbox_client(username, setup=True, stdin=None, stdout=None):
 
 
 def reset_dropbox(username):
-    """resets the dropbox configuration for the user username"""
+    """
+    Reset the dropbox configuration for the user username.
+    
+    @param username: username to reset
+    @type username: L{str}
+    """
     try:
         db = get_dropbox_client(username, setup=False)
     except:
@@ -133,7 +179,21 @@ def reset_dropbox(username):
 
 
 def _menu(header, choices, stdin=None, stdout=None):
-    """a command-line menu."""
+    """
+    Show a commandline menu.
+    
+    @param header: header to show
+    @type header L{str}
+    @param choices: available choices for the user
+    @type choices: L{list} of L{str}
+    @param stdin: stdin to read from
+    @type stdin: L{io.IOBase}
+    @param stdout: stdout to write to
+    @type stdout: L{io.IOBase}
+    @return: the selected index
+    @rtype: L{int}
+    @raises: AssertionError
+    """
     if stdin is None:
         stdin = sys.stdin
     if stdout is None:
@@ -147,12 +207,19 @@ def _menu(header, choices, stdin=None, stdout=None):
         answer = stdin.readline().strip()
         try:
             answer = int(answer)
-            return answer
+            if answer >= 0 and answer < len(choices):
+                return answer
         except (KeyError, ValueError, IndexError):
-            stdout.write("\n" * 20)
+            pass
+        stdout.write("\n" * 20)
 
 
 def _open_url(url):
-    """opens an url"""
+    """
+    Open an url.
+    
+    @param url: url to open
+    @type url: L{str}
+    """
     _stash = core.get_stash()
     _stash("webviewer {u}".format(u=url))

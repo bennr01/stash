@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Interface to FTP-servers."""
+"""
+Interface to FTP-servers.
+"""
+
 import ftplib
 import tempfile
 import os
@@ -11,16 +14,18 @@ from stashutils.fsi.base import BaseFSI, make_stat, calc_mode
 from stashutils.fsi.errors import OperationFailure, IsDir, IsFile
 from stashutils.fsi.errors import AlreadyExists
 
+
 _stash = get_stash()
 
 
 class FTPFSI(BaseFSI):
     """
-	a FSI for FTP-server.
-Unfortunally, FTP was designed as a human-readable protocol.
-Due to this, the protocol is not completly unified.
-This means, that this FSI may not work on all FTP-servers.
-"""
+    A FSI for FTP-server.
+    
+    Unfortunally, FTP was designed as a human-readable protocol.
+    Due to this, the protocol is not completly unified.
+    This means, that this FSI may not work on all FTP-servers.
+    """
 
     def __init__(self, logger=None):
         self.logger = logger
@@ -29,7 +34,9 @@ This means, that this FSI may not work on all FTP-servers.
         self.host = None
 
     def abspath(self, name):
-        """returns the absolute path of name"""
+        """
+        Returns the absolute path of name.
+        """
         return os.path.join(self.path, name)
 
     def connect(self, *args):
@@ -204,10 +211,12 @@ This means, that this FSI may not work on all FTP-servers.
 
     def _get_total_size_and_type(self, path):
         """
-		returns the file/dir size and the type. Copied from:
-		http://stackoverflow.com/questions/22090001/get-folder-size-using-ftplib
-		This is a modified version.
-		"""
+        Returns the file/dir size and the type.
+        
+        Copied from:
+        U{http://stackoverflow.com/questions/22090001/get-folder-size-using-ftplib}
+        This is a modified version.
+        """
         size = 0
         op = self.ftp.pwd()
         try:
@@ -246,8 +255,12 @@ This means, that this FSI may not work on all FTP-servers.
 
 
 class FTP_Upload(object):
-    """utility class used for FTP-uploads.
-this class creates a tempfile, which is uploaded to the server when closed."""
+    """
+    Utility class used for FTP-uploads.
+    
+    This class creates a tempfile, which is uploaded to the server when
+    closed.
+    """
 
     def __init__(self, ftp, path, mode, name):
         self.ftp = ftp

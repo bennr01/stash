@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-"""functions and classes related to wheels."""
+"""
+PEP427 (wheels) support.
+
+Functions and classes related to wheels.
+
+This module can also be invoked using the command line, though this is
+mainly for debugging and wont install dependencies.
+
+@var DEFAULT_HANDLERS: the default handlers to process a wheel.
+@type DEFAULT_HANDLERS: L{list} of L{BaseHandler} subclasses
+"""
 import os
 import shutil
 import tempfile
@@ -28,6 +38,12 @@ class WheelError(Exception):
 def parse_wheel_name(filename):
     """
     Parse the filename of a wheel and return the information as dict.
+    
+    @param filename: filename to parse
+    @type filename: L{str}
+    @return: the parsed information
+    @rtype: L{dict}
+    @raises: WheelError
     """
     if not filename.endswith(".whl"):
         raise WheelError("PEP427 violation: wheels need to end with '.whl'")
@@ -61,6 +77,11 @@ def parse_wheel_name(filename):
 def escape_filename_component(fragment):
     """
     Escape a component of the filename as specified in PEP 427.
+    
+    @param fragment: fragment to escape
+    @type fragment: L{str}
+    @return: the escaped fragment
+    @rtype: L{str}
     """
     return re.sub(r"[^\w\d.]+", "_", fragment, re.UNICODE)
 
@@ -75,7 +96,29 @@ def generate_filename(
 ):
     """
     Generate a filename for the wheel and return it.
+    
+    @param distribution: distribution name (e.g. 'StaSh')
+    @type distribution: L{str}
+    @param version: distribution version (e.g. '1.0.0')
+    @type version: L{str}
+    @param build_tag: the build tag, a tiebreaker if two builds have
+    the same version. Must start with a digit.
+    @type build_tag: L{str} or L{None}
+    @param python_tag: the language implementation and version tag
+    (e.g. py27)
+    @type python_tag: L{str} or L{None}
+    @param abi_tag: E.g. 'cp33m'. If None is given, use 'none'
+    @type abi_tag: L{str} or L{None}
+    @param platform_tag: target platform (e.g. 'linux_x86_64'). If None
+    is given, use 'any'.
+    @type platform_tag: L{str} or L{None}
+    @return: the filename encoding the given information
+    @rtype: L{str}
+    @raises: ValueError
     """
+    if build_tag is not None:
+        if not re.match("[0-9]+.*"):
+            raise ValueError("build_tag must start with a digit!")
     if python_tag is None:
         if six.PY3:
             python_tag = "py3"
@@ -98,6 +141,11 @@ def generate_filename(
 def wheel_is_compatible(filename):
     """
     Return True if the wheel is compatible, False otherwise.
+    
+    @param filename: filename to check
+    @type filename: L{str}
+    @return: whether the wheel is compatible or not.
+    @rtype: L{bool}
     """
     data = parse_wheel_name(filename)
     if ("py2.py3" in data["python_tag"]) or ("py3.py2" in data["python_tag"]):
@@ -119,24 +167,39 @@ def wheel_is_compatible(filename):
 class BaseHandler(object):
     """
     Baseclass for installation handlers.
+    
+    @cvar name: name of the handler
+    @type name: L{str}
+    
+    @ivar wheel: the wheel to handle
+    @type wheel: L{wheel}
+    @ivar verbose: if True, print debug informations
+    @type verbose: L{bool}
     """
     name = "<name not set>"
 
     def __init__(self, wheel, verbose=False):
+        """
+        @param wheel: the wheel to handle
+        @type wheel: L{wheel}
+        @param verbose: if True, print debug informations
+        @type verbose: L{bool}
+        """
         self.wheel = wheel
         self.verbose = verbose
 
     def copytree(self, packagepath, src, dest, remove=False):
         """
         Copies a package directory tree.
+        
         @param packagepath: relative path of the (sub-)package, e.g. 'package/subpackage/'
-        @type packagepath: str
+        @type packagepath: L{str}
         @param src: path to the actual source of the root package
-        @type src: str
+        @type src: L{str}
         @param dest: path to copy to
-        @type dest: str
+        @type dest: L{str}
         @return: the path to which the directories have been copied.
-        :trype: str
+        @rtype: L{str}
         """
         if self.verbose:
             print("Copying {s} -> {d}".format(s=src, d=dest))
@@ -160,16 +223,33 @@ class BaseHandler(object):
 
     @property
     def distinfo_name(self):
-        """the name of the *.dist-info directory."""
+        """
+        The name of the *.dist-info directory.
+        """
         data = parse_wheel_name(self.wheel.filename)
         return "{pkg}-{v}.dist-info".format(
             pkg=data["distribution"],
             v=data["version"],
         )
+    
+    def handle_install(self, src, dest):
+        """
+        Handle a part of the install.
+        
+        @param src: path to extracted wheel content
+        @type src: L{str}
+        @param dest: path to dir to install to
+        @type dest: L{str}
+        @return: a list of the installed files
+        @rtype: L{list} of L{str}
+        """
+        raise NotImplementedError("This method must be overwritten by a subclass")
 
 
 class TopLevelHandler(BaseHandler):
-    """Handler for 'top_level.txt'"""
+    """
+    Handler for 'top_level.txt'.
+    """
     name = "top_level.txt installer"
 
     def handle_install(self, src, dest):
@@ -197,7 +277,9 @@ class TopLevelHandler(BaseHandler):
 
 
 class ConsoleScriptsHandler(BaseHandler):
-    """Handler for 'console_scripts'."""
+    """
+    Handler for 'console_scripts'.
+    """
     name = "console_scripts installer"
 
     def handle_install(self, src, dest):
@@ -257,7 +339,9 @@ if __name__ == "__main__":
 
 
 class WheelInfoHandler(BaseHandler):
-    """Handler for wheel informations."""
+    """
+    Handler for wheel informations.
+    """
     name = "WHEEL information checker"
     supported_major_versions = [1]
     supported_versions = ["1.0"]
@@ -326,7 +410,14 @@ class DependencyHandler(BaseHandler):
         self.wheel.dependencies += dependencies
 
     def read_dependencies_from_METADATA(self, p):
-        """read dependencies from distinfo/METADATA"""
+        """
+        Read dependencies from 'distinfo/METADATA'.
+        
+        @param path: path to the METADATA path
+        @type path: L{str}
+        @return: the dependencies read from the file
+        @rtype: L{list} of L{str}
+        """
         dependencies = []
         with open(p, "r", encoding='utf-8') as fin:
             for line in fin:
@@ -378,9 +469,38 @@ DEFAULT_HANDLERS = [
 
 
 class Wheel(object):
-    """class for installing python wheels."""
+    """
+    Class for representing and installing python wheels.
+    
+    @ivar path: path to wheel
+    @type path: L{str}
+    @ivar extras: list of extras to install for this wheel
+    @type extras: L{list} of L{str}
+    @ivar verbose: if True, be more verbose
+    @type verbose: L{bool}
+    @ivar filename: the filename of this wheel, derived from the path
+    @type filename: L{str}
+    @ivar handlers: handlers to process this wheel
+    @type handlers: L{list} of L{BaseHandler}
+    @ivar version: the WHEEL version. Not to be confused with the
+    distribution version. Set by a handler.
+    @type version: L{tuple} of (L{int}, L{int})
+    @ivar dependencies: dependencies of this wheel. Set by a handler.
+    @type dependencies: L{list} of L{str}
+    """
 
     def __init__(self, path, handlers=DEFAULT_HANDLERS, extras=[], verbose=False):
+        """
+        @param path: path to wheel
+        @type path: L{str}
+        @param handlers: handlers to process this wheel
+        @type handlers: L{list} of L{BaseHandler}
+        @param extras: list of extras to install for this wheel
+        @type extras: L{list} of L{str}
+        @param verbose: if True, be more verbose
+        @type verbose: L{bool}
+        @raises: WheelError
+        """
         self.path = path
         self.extras = extras
         self.verbose = verbose
@@ -395,7 +515,11 @@ class Wheel(object):
     def install(self, targetdir):
         """
         Install the wheel into the target directory.
-        Return (files_installed, dependencies)
+        
+        @param targetdir: dir to install into
+        @type targetdir: L{str}
+        @return: (files_installed, dependencies)
+        @rtype: L{tuple} of (L{list} of L{str}, L{list} of L{str})
         """
         if self.verbose:
             print("Extracting wheel..")
@@ -421,7 +545,9 @@ class Wheel(object):
     def extract_into_temppath(self):
         """
         Extract the wheel into a temporary directory.
-        Return the path of the temporary directory.
+        
+        @return: the path of the temporary directory.
+        @rtype: L{str}
         """
         p = os.path.join(tempfile.gettempdir(), "wheel_tmp", self.filename)
         if not os.path.exists(p):
