@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Apply the style rules to the source.
+
+This module depends on L{yapf}.
+
+This module provides a command line interface as the primary method of
+invocation.
 """
+
 import argparse
 import os
 import sys
@@ -18,14 +24,15 @@ except (ImportError, ValueError):
 def apply_to_file(fp, sp, in_place=False):
     """
     Apply the style to a file.
+    
     @param fp: path to file
-    @type fp: str
+    @type fp: L{str}
     @param sp: path to style
-    @type sp: str
+    @type sp: L{str}
     @param in_place: format code in-place
-    @type in_place: bool
+    @type in_place: L{bool}
     @return: the reformated code
-    @rtype: str or None
+    @rtype: L{str} or L{None}
     """
     rc, encoidng, changed = FormatFile(fp, style_config=sp, verify=True, in_place=in_place)
     return rc
@@ -34,18 +41,19 @@ def apply_to_file(fp, sp, in_place=False):
 def apply_to_dir(path, style, recursive=False, in_place=False, verbose=False, pyonly=True):
     """
     Apply the style to all files in a directory.
+    
     @param path: path to directory
-    @type path: str
+    @type path: L{str}
     @param style: path to style file
-    @type style: str
+    @type style: L{str}
     @param recursive: also descend into subdirectories
-    @type recursive: bool
+    @type recursive: L{bool}
     @param in_place: apply the changes directly to the file
-    @type in_place: bool
+    @type in_place: L{bool}
     @param verbose: print additional information
-    @type verbose: bool
+    @type verbose: L{bool}
     @param pyonly: only apply to .py files
-    @type pyonly: bool
+    @type pyonly: L{bool}
     """
     if verbose:
         print("Applying style to directory '{}'...".format(path))
@@ -67,7 +75,9 @@ def apply_to_dir(path, style, recursive=False, in_place=False, verbose=False, py
 
 
 def main():
-    """the main function"""
+    """
+    The main function.
+    """
     parser = argparse.ArgumentParser(description="Reformat source to follow style rules")
     parser.add_argument("action", help="action to perform", choices=["apply"])
     parser.add_argument("-p", "--path", action="store", help="path to file/directory")

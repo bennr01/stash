@@ -1,6 +1,13 @@
 #!python2
 # -*- coding: utf-8 -*-
-"""Rewrite docstrings to use @param foo: style docstrings"""
+"""
+Rewrite docstrings to use C{@param foo:} style docstrings instead of
+C{:param foo:} style docstrings.
+
+This module provides a command line interfaces as the primary means of
+invocation.
+"""
+
 import os
 import argparse
 import re
@@ -14,23 +21,25 @@ except (ImportError, ValueError):
 def is_doc_line(s):
     """
     Check if the given line is a doc line.
+    
     @param s: line to check
-    @type s: str
+    @type s: L{str}
     @return: whether the given line is a docstring line or not
-    @rtype:  bool
+    @rtype: L{bool}
     """
-    return re.match(".*:(param|type|return|rtype|attr|raises).*:", s)
+    return re.match(".*:(param|type|return|rtype|attr|raises|var|ivar|cvar).*:", s)
 
 
 def rewrite_all_docstrings(p, recursive=False, ignore_nonpy=False):
     """
     Rewrite all files in a directory.
+    
     @param p: path to directory
-    @type p: str
+    @type p: L{str}
     @param recursive: whether to descend into subdirectories or not
-    @type recursive: bool
+    @type recursive: L{bool}
     @param ignore_nonpy: skip files not ending with .py
-    @type ignore_nonpy: bool
+    @type ignore_nonpy: L{bool}
     """
     for fn in os.listdir(p):
         fp = os.path.join(p, fn)
@@ -47,8 +56,9 @@ def rewrite_all_docstrings(p, recursive=False, ignore_nonpy=False):
 def rewrite_file_docstrings(p):
     """
     Rewrite the docstrings in a file.
+    
     @param p: path to the file
-    @type p: str
+    @type p: L{str}
     """
     with open(p, "r") as fin:
         lines = fin.readlines()
@@ -65,16 +75,19 @@ def rewrite_file_docstrings(p):
 def rewrite_docline(line):
     """
     Rewrite a line in a docstring.
+    
     @param line: line to rewrite
-    @type line: str
+    @type line: L{str}
     @return: the rewriten line
-    @rtype: str
+    @rtype: L{str}
     """
     return line.replace(":", "@", 1)
 
 
 def main():
-    """the main function"""
+    """
+    The main function.
+    """
     parser = argparse.ArgumentParser(description="Rewrite docstrings")
     parser.add_argument("-p", "--path", action="store", help="path to file(s), defaults to StaSh root")
     parser.add_argument("-r", "--recursive", action="store_true", help="descend into subdirectories")

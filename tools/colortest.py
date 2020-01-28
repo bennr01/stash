@@ -1,21 +1,28 @@
 """
-Test color support
+Debug script for testing color support.
 """
 
 _stash = globals()["_stash"]
 
+
 def get_all_bg_colors():
     """
     Return a list of all known bg colors
+    
+    @return: the names of all background colors
+    @rtype: L{list} of L{str}
     """
-    return _stash.renderer.BG_COLORS.keys()
+    return list(_stash.renderer.BG_COLORS.keys())
 
 
 def get_all_fg_colors():
     """
     Return a list of all known fg colors
+    
+    @return: the names of all foreground colors
+    @rtype: L{list} of L{str}
     """
-    return _stash.renderer.FG_COLORS.keys()
+    return list(_stash.renderer.FG_COLORS.keys())
 
 
 def main():
