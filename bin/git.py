@@ -22,7 +22,12 @@ Commands:
     reset: git reset - reset a repo to its pre-change state
     diff: git diff - show changes in staging area
     help: git help
+
+
+@var command_help: mapping of subcommand name -> subcommand help
+@type command_help: L{dict} of L{str} -> L{str}
 '''
+
 from __future__ import print_function
 
 import argparse
@@ -31,6 +36,7 @@ import posix
 import subprocess
 import sys
 
+import six
 from six import StringIO
 from six.moves import input
 from six.moves.urllib.parse import urlparse, urlunparse
@@ -42,125 +48,65 @@ import keychain
 
 _stash = globals()['_stash']
 SAVE_PASSWORDS = True
+AUTODOWNLOAD_DEPENDENCIES = True
+
 
 # temporary -- install required modules
 # needed for dulwich: subprocess needs to have Popen
 if not hasattr(subprocess, 'call'):
 
     def Popen(*args, **kwargs):
+        """
+        Dummy replacement for L{subprocess.Popen}.
+        """
         pass
 
     def call(*args, **kwargs):
+        """
+        Dummy replacement for L{subprocess.Popen}.
+        """
         return 0
 
     subprocess.Popen = Popen
     subprocess.call = call
-GITTLE_URL = 'https://github.com/jsbain/gittle/archive/master.zip'
-FUNKY_URL = 'https://github.com/FriendCode/funky/archive/master.zip'
-DULWICH_URL = 'https://github.com/jsbain/dulwich/archive/ForStaSH_0.12.2.zip'
-REQUIRED_DULWICH_VERSION = (0, 12, 2)
-AUTODOWNLOAD_DEPENDENCIES = True
 
-if AUTODOWNLOAD_DEPENDENCIES:
-    libpath = os.path.join(os.environ['STASH_ROOT'], 'lib')
-    if not libpath in sys.path:
-        sys.path.insert(1, libpath)
-    download_dulwich = False
-
-    #DULWICH
-    try:
-        import dulwich
-        from dulwich.client import default_user_agent_string
-        from dulwich import porcelain
-        from dulwich.index import index_entry_from_stat
-        if not dulwich.__version__ == REQUIRED_DULWICH_VERSION:
-            print(
-                'Dulwich version was {}.  Required is {}.  Attempting to reload'.format(
-                    dulwich.__version__,
-                    REQUIRED_DULWICH_VERSION
-                )
-            )
-            for m in [m for m in sys.modules if m.startswith('dulwich')]:
-                del sys.modules[m]
-            import dulwich
-            from dulwich.client import default_user_agent_string
-            from dulwich import porcelain
-            from dulwich.index import index_entry_from_stat
-            if not dulwich.__version__ == REQUIRED_DULWICH_VERSION:
-                print('Could not find correct version. Will download proper fork now')
-                download_dulwich = True
-            else:
-                print('Correct version loaded.')
-    except ImportError as e:
-        print('dulwich was not found.  Will attempt to download. ')
-        download_dulwich = True
-    try:
-        if download_dulwich:
-            if not input('Need to download dulwich.  OK to download [y/n]?') == 'y':
-                raise ImportError()
-            _stash('wget {} -o $TMPDIR/dulwich.zip'.format(DULWICH_URL))
-            _stash('unzip $TMPDIR/dulwich.zip -d $TMPDIR/dulwich')
-            _stash('rm -r $STASH_ROOT/lib/dulwich.old')
-            _stash('mv $STASH_ROOT/lib/dulwich $STASH_ROOT/lib/dulwich.old')
-            _stash('mv $TMPDIR/dulwich/dulwich $STASH_ROOT/lib/')
-            _stash('rm  $TMPDIR/dulwich.zip')
-            _stash('rm -r $TMPDIR/dulwich')
-            _stash('rm -r $STASH_ROOT/lib/dulwich.old')
-            try:
-                # dulwich might have already been in site-packages for instance.
-                # So, some acrobatic might be needed to unload the module
-                if 'dulwich' in sys.modules:
-                    for m in [m for m in sys.modules if m.startswith('dulwich')]:
-                        del sys.modules[m]
-                import dulwich
-                reload(dulwich)
-            except NameError:
-                pass
-            #try the imports again
-            import dulwich
-            from dulwich.client import default_user_agent_string
-            from dulwich import porcelain
-            from dulwich.index import index_entry_from_stat
-    except Exception:
-        print(
-            '''Still could not import dulwich.
-            Perhaps your network connection was unavailable.
-            You might also try deleting any existing dulwich versions in site-packages or elsewhere, then restarting pythonista.'''
-        )
-
-    #gittle, funky
-    # todo... check gittle version
-    try:
-        gittle_path = os.path.join(libpath, 'gittle')
-        funky_path = os.path.join(libpath, 'funky')
-        #i have no idea why this is getting cleared...
-        if libpath not in sys.path:
-            sys.path.insert(1, libpath)
-        import gittle
-        Gittle = gittle.Gittle
-    except ImportError:
-        _stash('wget {} -o $TMPDIR/gittle.zip'.format(GITTLE_URL))
-        _stash('unzip $TMPDIR/gittle.zip -d $TMPDIR/gittle')
-        _stash('mv $TMPDIR/gittle/gittle $STASH_ROOT/lib')
-        _stash('wget {} -o $TMPDIR/funky.zip'.format(FUNKY_URL))
-        _stash('unzip $TMPDIR/funky.zip -d $TMPDIR/funky')
-        _stash('mv $TMPDIR/funky/funky $STASH_ROOT/lib')
-        _stash('rm  $TMPDIR/gittle.zip')
-        _stash('rm  $TMPDIR/funky.zip')
-        _stash('rm -r $TMPDIR/gittle')
-        _stash('rm -r $TMPDIR/funky')
-        import gittle
-        Gittle = gittle.Gittle
-    ## end install modules
-else:
+# package import and installation
+try:
     import dulwich
-    from dulwich.client import default_user_agent_string
     from dulwich import porcelain
     from dulwich.index import index_entry_from_stat
-    from gittle import Gittle
+except ImportError:
+    if AUTODOWNLOAD_DEPENDENCIES:
+        # download dulwich
+        print("Installing dulwich...")
+        _stash("pip install dulwich")
+    else:
+        raise
+
+if six.PY3:
+    try:
+        import gittle3 as gittle
+        from gittle3 import Gittle
+    except ImportError:
+        if AUTODOWNLOAD_DEPENDENCIES:
+            # download gittle3
+            print("Installing gittle3...")
+            _stash("pip install gittle3")
+        else:
+            raise
+else:
+    try:
+        import gittle
+        from gittle import Gittle
+    except ImportError:
+        if AUTODOWNLOAD_DEPENDENCIES:
+            # download gittle
+            _stash("pip install gittle")
+        else:
+            raise
 
 dulwich.client.get_ssh_vendor = dulwich.client.ParamikoSSHVendor
-#  end temporary
+
 
 command_help = {
     'init': 'initialize a new Git repository',
@@ -186,14 +132,22 @@ command_help = {
 }
 
 
-#Find a git repo dir
 def _find_repo(path):
+    """
+    Find the path of the current git repository.
+    
+    @param path: path to search from
+    @type path: L{str}
+    @return: the path of the git repository
+    @rtype: L{str}
+    """
     try:
         subdirs = os.walk(path).next()[1]
     except StopIteration:  # happens if path is not listable
         return None
 
     if '.git' in subdirs:
+        # TODO: does this actually work with bare repositories?
         return path
     else:
         parent = os.path.dirname(path)
@@ -205,6 +159,13 @@ def _find_repo(path):
 
 #Get the parent git repo, if there is one
 def _get_repo():
+    """
+    Get the parent git repo, if there is one.
+    
+    @return: the parent git repo object.
+    @rtype: L{gittle.Gittle}
+    @raises: Exception
+    """
     repo_dir = _find_repo(os.getcwd())
     if not repo_dir:
         raise Exception("Current directory isn't a git repository")
@@ -212,6 +173,14 @@ def _get_repo():
 
 
 def _confirm_dangerous():
+    """
+    Warn the user and ask for confirmation if there are any uncommitted/
+    staged changes.
+    
+    Raises an exception if the user does not confirm.
+    
+    @raises: Exception
+    """
     repo = _get_repo()
     status = porcelain.status(repo.path)
     if any(status.staged.values() + status.unstaged):
@@ -356,7 +325,6 @@ def git_merge(args):
 
 
 def git_reset(args):
-    import git.gitutils as gitutils
     ap = argparse.ArgumentParser('reset')
     ap.add_argument('commit', nargs='?', action='store', default='HEAD')
     ap.add_argument('paths', nargs='*')
@@ -777,6 +745,8 @@ commands = {
     'diff': git_diff,
     'help': git_help
 }
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         sys.argv = sys.argv + ['-h']
