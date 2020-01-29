@@ -1,5 +1,7 @@
-"""Tests for stash.system.shhistory"""
-# coding=utf-8
+# -*- coding: utf-8 -*-
+"""
+Tests for L{stash.system.shhistory}.
+"""
 
 import os
 
@@ -8,16 +10,20 @@ from stash.tests.stashtest import StashTestCase
 
 
 class HistoryTests(StashTestCase):
+    """
+    Tests for L{stash.system.shhistory}
+    """
 
     setup_commands = ['BIN_PATH=$STASH_ROOT/tests/system/data:$BIN_PATH']
 
-    def get_data_path(self):
-        """return the data/ sibling path"""
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-
     @property
     def history(self):
-        """quick access to history"""
+        """
+        Quick access to history.
+        
+        @return: the current stash history object
+        @rtype: L{stash.system.shhistory.ShHistory}
+        """
         return self.stash.runtime.history
 
     def setUp(self):
@@ -26,12 +32,16 @@ class HistoryTests(StashTestCase):
         self.history.swap("HistoryTest")
 
     def test_new_empty(self):
-        """test that a new ShHistory is empty"""
+        """
+        Test that a new L{stash.system.shhistory.ShHistory} is empty.
+        """
         h = ShHistory(self.stash)  # should not create any problems
         self.assertEqual(len(h.getlist()), 0)
 
     def test_add_simple(self):
-        """test ShHistory.add"""
+        """
+        Test L{stash.system.shhistory.ShHistory.add}.
+        """
         # 'test' should not be in history
         self.assertNotIn("test", self.history.getlist())
         # add it
@@ -40,7 +50,10 @@ class HistoryTests(StashTestCase):
         self.assertIn("test", self.history.getlist())
 
     def test_add_whitespace(self):
-        """test that adding lines with whitespaces at the beginning depends on the settings"""
+        """
+        Test that adding lines with whitespaces at the beginning depends
+        on the settings.
+        """
         # test ignoring lines starting with whitespaces
         self.history.hide_whitespace = True
         self.history.add("a")
@@ -71,7 +84,9 @@ class HistoryTests(StashTestCase):
         self.assertIn("c", l)
 
     def test_add_doubble(self):
-        """test adding a line twice in a row"""
+        """
+        Test adding a line twice in a row.
+        """
         l = "testline"
         # test with disallowed double lines
         self.history.allow_double = False
@@ -101,7 +116,9 @@ class HistoryTests(StashTestCase):
         self.assertIn(l, self.history.getlist())
 
     def test_clear(self):
-        """test ShHistory.clear()"""
+        """
+        Test L{stash.system.shhistory.ShHistory.clear}.
+        """
         self.assertEqual(len(self.history.getlist()), 0)
         elements = ["a", "b", "c", "d"]
         for e in elements:
@@ -111,7 +128,9 @@ class HistoryTests(StashTestCase):
         self.assertEqual(len(self.history.getlist()), 0)
 
     def test_clear_all(self):
-        """test ShHistory.clear_all()"""
+        """
+        Test L{stash.system.shhistory.ShHistory.clear_all}.
+        """
         self.assertEqual(len(self.history.getlist()), 0)
         elements = ["a", "b", "c", "d"]
         self.history.swap("h_1")
@@ -128,7 +147,9 @@ class HistoryTests(StashTestCase):
         self.assertEqual(len(self.history.getlist()), 0)
 
     def test_getlist_base(self):
-        """base tests for ShHistory.getlist()"""
+        """
+        Base tests for L{stash.system.shhistory.ShHistory.getlist}.
+        """
         # list should be empty
         self.assertEqual(len(self.history.getlist()), 0)
         # after adding an item it should no longer be empty
@@ -143,7 +164,10 @@ class HistoryTests(StashTestCase):
         self.assertEqual(len(self.history.getlist()), 3)
 
     def test_getlist_inversed_order(self):
-        """test  to ensure that ShHistory.getlist() returns the list in inversed order"""
+        """
+        Test to ensure that L{stash.system.shhistory.ShHistory.getlist}
+        returns the list in inversed order.
+        """
         # list should be empty
         self.assertEqual(len(self.history.getlist()), 0)
         # add elements
@@ -157,13 +181,18 @@ class HistoryTests(StashTestCase):
             self.assertEqual(int(e), i)
 
     def test_getlist_newlist(self):
-        """test to ensure that getlist() creates a new list"""
+        """
+        Test to ensure that L{stash.system.shhistory.ShHistory.getlist}
+        creates a new list.
+        """
         self.history.add("a")
         self.history.add("b")
         self.assertIsNot(self.history.getlist(), self.history.getlist())
 
     def test_swap(self):
-        """test ShHistory.swap()"""
+        """
+        Test L{stash.system.shhistory.ShHistory.swap}.
+        """
         # swap somewhere
         self.history.swap("h_1")
         # ensure empty
@@ -194,7 +223,9 @@ class HistoryTests(StashTestCase):
         self.assertListEqual(old_h2_list, new_h2_list)
 
     def test_save_load(self):
-        """test saving and loading of the history"""
+        """
+        Test saving and loading of the history.
+        """
         elements = ["1", "2", "3", "4", "5"]
         filename = "history_test_s_l"
         hname = "SaveLoadTest"
@@ -224,14 +255,18 @@ class HistoryTests(StashTestCase):
         self.assertListEqual(self.history.getlist(), h.getlist())
 
     def test_load_fail(self):
-        """test that loading a nonexistent file fails"""
+        """
+        Test that loading a nonexistent file fails.
+        """
         p = "/does/not/exists"
         self.assertFalse(os.path.exists(p))
         with self.assertRaises(IOError):
             ShHistory.load(p, self.stash)
 
     def test_load_old(self):
-        """test loading old histories"""
+        """
+        Test loading old histories.
+        """
         p = os.path.join(self.get_data_path(), "old_history.txt")
         h = ShHistory.load(p, self.stash)
         # explicitly switch to StaSh.runtime

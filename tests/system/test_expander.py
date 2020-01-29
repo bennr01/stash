@@ -1,15 +1,30 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+"""
+Tests for L{stash.system.shparsers.ShExpander}.
+"""
+
 import os
 
 from stash.tests.stashtest import StashTestCase
 
 
 class ExpanderTests(StashTestCase):
+    """
+    Tests for L{stash.system.shparsers.ShExpander}.
+    """
     def setUp(self):
         StashTestCase.setUp(self)
         self.expand = self.stash.runtime.expander.expand
 
     def _get_pipe_sequence(self, line):
+        """
+        Expand a line into a pipe sequence.
+        
+        @param line: line to expand.
+        @type line: L{str}
+        @return: the expanded line as a pipe sequence
+        @rtype: L{stash.system.shparsers.ShPipeSequence}
+        """
         expanded = self.expand(line)
         next(expanded)
         return next(expanded)

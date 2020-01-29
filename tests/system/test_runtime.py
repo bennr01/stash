@@ -1,9 +1,15 @@
-# coding=utf-8
+# -*. coding: utf-8 -*-
+"""
+Tests for L{stash.system.shruntime}.
+"""
 
 from stash.tests.stashtest import StashTestCase
 
 
 class RuntimeTests(StashTestCase):
+    """
+    Tests for L{stash.system.shruntime}.
+    """
 
     setup_commands = ['BIN_PATH=$STASH_ROOT/tests/system/data:$BIN_PATH']
 

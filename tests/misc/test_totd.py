@@ -1,17 +1,19 @@
+# -*- coding: utf-8 -*-
 """
-Tests for the 'totd' command.
+Tests for the L{totd} command.
 """
+
 from stash.tests.stashtest import StashTestCase
 
 
 class TotdTests(StashTestCase):
     """
-    Tests for the 'totd' command.
+    Tests for the L{totd} command.
     """
     
     def test_help(self):
         """
-        Test 'totd --help'.
+        Test C{totd --help}.
         """
         output = self.run_command("totd --help", exitcode=0)
         self.assertIn("totd", output)
@@ -22,7 +24,7 @@ class TotdTests(StashTestCase):
     
     def test_count(self):
         """
-        Test 'totd --count'.
+        Test C{totd --count}.
         """
         output = self.run_command("totd --count", exitcode=0).replace("\n", "")
         # ensure that the string is correct
@@ -32,7 +34,7 @@ class TotdTests(StashTestCase):
     
     def test_simple(self):
         """
-        Test a simple 'totd' execution.
+        Test a simple L{totd} execution.
         Ensure that different totds are returned.
         """
         known = []

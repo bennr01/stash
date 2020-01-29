@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
-"""tests for the wheel-support"""
+"""
+Tests for the wheel-support (L{stashutils.wheels})
+"""
 import six
 
 from stash.tests.stashtest import StashTestCase
 
 
 class WheelsTests(StashTestCase):
-    """tests fpr the wheel-support."""
+    """
+    Tests for the wheel-support.
+    """
 
     def test_wheel_is_compatible(self):
-        """test wheel_is_compatible() result"""
+        """
+        Test L{stashutils.wheels.wheel_is_compatible} results.
+        """
         from stashutils import wheels
 
         wheelnamecompatibility = [
@@ -28,7 +34,9 @@ class WheelsTests(StashTestCase):
             self.assertEqual(ic, is_compatible)
 
     def test_wheel_is_compatible_raises(self):
-        """test wheel_is_compatible() error handling"""
+        """
+        Test L{stashutils.wheels.wheel_is_compatible} error handling.
+        """
         from stashutils import wheels
 
         wrong_wheelnames = [
@@ -45,7 +53,9 @@ class WheelsTests(StashTestCase):
                 raise AssertionError("wheels.wheel_is_compatible() did not raise WheelError when required.")
 
     def test_parse_wheel_name(self):
-        """test parse_wheel_name()"""
+        """
+        Test L{stashutils.wheels.parse_wheel_name}.
+        """
         from stashutils import wheels
 
         name1 = "distribution-version-buildtag-pythontag-abitag-platformtag.whl"
@@ -73,7 +83,9 @@ class WheelsTests(StashTestCase):
         self.assertEqual(result2, expected2)
 
     def test_generate_filename(self):
-        """test generate_filename()"""
+        """
+        Test L{stashutils.wheels.generate_filename}.
+        """
         from stashutils import wheels
 
         data = {

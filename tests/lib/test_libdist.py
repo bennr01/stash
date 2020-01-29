@@ -1,23 +1,23 @@
 """
-Test for 'libdist'.
+Test for L{libdist}.
 """
 from stash.tests.stashtest import StashTestCase
 
 
 class LibDistTests(StashTestCase):
     """
-    Tests for 'libdist'
+    Tests for L{libdist}.
     """
     def test_libdist_is_loaded(self):
         """
-        Test that 'libdist' is loaded.
+        Test that L{libdist} is loaded.
         """
         loaded_libs = [an for an in dir(self.stash) if an.startswith("lib")]
         self.assertIn("libdist", loaded_libs)
     
     def test_clipboard_api_available(self):
         """
-        Test that the clipboard api is provided by libdist
+        Test that the clipboard api is provided by L{libdist}
         """
         defs = dir(self.stash.libdist)
         self.assertIn("clipboard_get", defs)
@@ -25,7 +25,7 @@ class LibDistTests(StashTestCase):
     
     def test_pip_definitions_available(self):
         """
-        Test that the libdist provides the definitions required by 'pip'.
+        Test that the libdist provides the definitions required by L{pip}.
         """
         defs = dir(self.stash.libdist)
         required = ["SITE_PACKAGES_FOLDER", "SITE_PACKAGES_FOLDER_6", "BUNDLED_MODULES"]

@@ -1,25 +1,36 @@
 # -*- coding: utf-8 -*-
-"""tests for libversion"""
+"""
+Tests for L{libversion}.
+"""
+
 import operator
 
 from stash.tests.stashtest import StashTestCase
 
 
 class LibVersionTests(StashTestCase):
-    """Tests for the 'libversion' module"""
+    """
+    Tests for the L{libversion} module.
+    """
 
     def test_is_loaded(self):
-        """assert that the 'libversion' module is loaded by StaSh"""
-        assert hasattr(self.stash, "libversion")
+        """
+        Assert that the L{libversion} module is loaded by StaSh
+        """
         self.assertIsNotNone(self.stash)
+        assert hasattr(self.stash, "libversion")
 
     def test_import(self):
-        """test that the libversion module can be imported"""
+        """
+        Test that the L{libversion} module can be imported
+        """
         # $STASH_ROOT/lib/ *should* be in sys.path, thus an import should be possible
         import libversion
 
     def test_version_specifier_parse(self):
-        """test 'libversion.VersionSpecifier.parse_requirement()'"""
+        """
+        Test L{libversion.VersionSpecifier.parse_requirement}.
+        """
         to_test = [
             # format: (requirement_str, pkg_name, [(op1, v1), ...], extras)
             ("noversion",
@@ -102,7 +113,9 @@ class LibVersionTests(StashTestCase):
                 self.assertItemsEqual(exp_extras, extras)
 
     def test_version_specifier_match(self):
-        """test 'libversion.VersionSpecifier().match()'"""
+        """
+        Test L{libversion.VersionSpecifier.match}.
+        """
         to_test = [
             # format: (requirement_str, [(testversion, result)])
             (
@@ -186,21 +199,27 @@ class LibVersionTests(StashTestCase):
                 self.assertEqual(result, expected)
 
     def test_sort_versions_main(self):
-        """test 'libversion.sort_versions()' for main versions"""
+        """
+        Test L{libversion.sort_versions} for main versions.
+        """
         raw = ["1.0.0", "0.5.0", "0.6.0", "0.5.9", "11.0.3", "11.0.4", "0.1.0", "5.7.0"]
         expected = ["11.0.4", "11.0.3", "5.7.0", "1.0.0", "0.6.0", "0.5.9", "0.5.0", "0.1.0"]
         sortedres = self.stash.libversion.sort_versions(raw)
         self.assertEqual(sortedres, expected)
 
     def test_sort_versions_post(self):
-        """test 'libversion.sort_versions()' for post release number"""
+        """
+        Test L{libversion.sort_versions} for post release number.
+        """
         raw = ["1.0.0", "1.0.0.post2", "1.0.0.post3", "1.0.0-post1", "1.0.0.post"]
         expected = ["1.0.0.post3", "1.0.0.post2", "1.0.0-post1", "1.0.0.post", "1.0.0"]
         sortedres = self.stash.libversion.sort_versions(raw)
         self.assertEqual(sortedres, expected)
 
     def test_sort_versions_type(self):
-        """test 'libversion.sort_versions()' for release type"""
+        """
+        Test L{libversion.sort_versions} for release type.
+        """
         raw = [
             "1.0.0b",
             "1.0.0rc",
@@ -231,7 +250,9 @@ class LibVersionTests(StashTestCase):
         self.assertEqual(sortedres, expected)
 
     def test_version_parse(self):
-        """test 'libversion.Version.parse()''"""
+        """
+        Test L{libversion.Version.parse}.
+        """
         to_test = [
             # format: (s, {key_to_check: expected_value, ...})
             ("1.2.3",
@@ -292,7 +313,9 @@ class LibVersionTests(StashTestCase):
                 self.assertEqual(getattr(version, ean), eav)
 
     def test_version_cmp(self):
-        """test comparsion of 'libversion.Version()'-instances"""
+        """
+        Test comparsion of L{libversion.Version}-instances
+        """
         to_test = [
             # format: (vs1, op, vs2, res)
             # testdata for general equality

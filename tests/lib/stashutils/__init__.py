@@ -1,3 +1,5 @@
 # -*- coding: utf-8 -*-
-"""dummy file."""
+"""
+This package contains the various tests for L{stashutils}.
+"""
 pass

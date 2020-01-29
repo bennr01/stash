@@ -1,6 +1,7 @@
 """
-Tests for getstash.py
+Tests for L{getstash}
 """
+
 import sys
 import os
 import tempfile
@@ -13,13 +14,14 @@ from stash.tests.stashtest import StashTestCase, ON_TRAVIS
 
 class GetstashTests(StashTestCase):
     """
-    Test for the installation using getstash.py
+    Test for the installation using L{getstash}
     """
     def get_source_path(self):
         """
         Return the path to the StaSh root directory
+        
         @return: path of $STASH_ROOT
-        @rtype: str
+        @rtype: L{str}
         """
         cp = sys.modules[self.stash.__module__].__file__
         rp = os.path.dirname(cp)
@@ -27,9 +29,10 @@ class GetstashTests(StashTestCase):
         
     def get_getstash_path(self):
         """
-        Return the path of getstash.py
-        @return: the path of getstash.py
-        @rtype: str
+        Return the path of C{getstash.py}
+        
+        @return: the path of C{getstash.py}
+        @rtype: L{str}
         """
         rp = self.get_source_path()
         gsp = os.path.join(rp, "getstash.py")
@@ -38,8 +41,9 @@ class GetstashTests(StashTestCase):
     def load_getstash(self):
         """
         Load and compile getstash.py
+        
         @return: the compiled code
-        @rtype: Code
+        @rtype: L{types.CodeType}
         """
         p = self.get_getstash_path()
         with open(p, "r") as fin:
@@ -50,23 +54,25 @@ class GetstashTests(StashTestCase):
     def run_getstash(self, repo=None, branch=None, install_path=None, launcher_path=None, zippath=None, dist=None, dryrun=False, asuser=False):
         """
         Run getstash with the specified arguments.
+        
         Not all arguments may be available for all installation types.
+        
         @param repo: repo to pass to getstash.py
-        @type repo: str
+        @type repo: L{str}
         @param branch: branch to pass to getstash.py
-        @type branch: str
+        @type branch: L{str}
         @param install_path: path to install into
-        @type install_path: str
+        @type install_path: L{str}
         @param launcher_path: path to install launcher to
-        @type launcher_path: str
+        @type launcher_path: L{str}
         @param zippath: alternative path to zipfile to install from
-        @type zippath: str
+        @type zippath: L{str}
         @param dist: install type to force
-        @type dist: str
+        @type dist: L{str}
         @param dryrun: if True, tell the installer to not actually do anything
-        @type dryrun: bool
+        @type dryrun: L{bool}
         @param asuser: if True, install for user
-        @type asuser: bool
+        @type asuser: L{bool}
         """
         # build namespace to run installer in
         ns = {
@@ -97,10 +103,11 @@ class GetstashTests(StashTestCase):
     def get_new_tempdir(self, create=True):
         """
         Create a temporary directory and return the path to it.
+        
         @param create: if True, create the directory
-        @type create: bool
+        @type create: L{bool}
         @return: path to a temporary directory
-        @rtype: str
+        @rtype: L{str}
         """
         tp = tempfile.gettempdir()
         p = os.path.join(tp, "stash_test_getstash" + str(time.time()))
@@ -111,8 +118,9 @@ class GetstashTests(StashTestCase):
     def create_stash_zipfile(self):
         """
         Create a github-like zipfile from this source and return the path.
+        
         @return: path to zipfile
-        @rtype: str
+        @rtype: L{str}
         """
         tp = self.get_new_tempdir(create=True)
         toplevel_name = "stash-testing"

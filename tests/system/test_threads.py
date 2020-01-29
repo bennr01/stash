@@ -1,4 +1,11 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+"""
+Tests for L{stash.system.shthreads}.
+
+Because threads provoke randomness, there is a slight chances that these
+tests will fail for no good reason.
+"""
+
 import time
 
 from six import StringIO
@@ -7,6 +14,9 @@ from stash.tests.stashtest import StashTestCase
 
 
 class ThreadsTests(StashTestCase):
+    """
+    Tests for L{stash.system.shthreads}.
+    """
 
     setup_commands = ['BIN_PATH=$STASH_ROOT/tests/system/data:$BIN_PATH']
 

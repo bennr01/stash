@@ -1,4 +1,7 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+"""
+Tests for ensuring terminal-like output behaviour.
+"""
 
 from stash.tests.stashtest import StashTestCase
 

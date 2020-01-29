@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""tests for the 'alias' command"""
+"""
+Tests for the L{alias} command.
+"""
+
 from stash.tests.stashtest import StashTestCase
 
 
 class AliasTests(StashTestCase):
-    """Tests for the 'alias' command."""
+    """
+    Tests for the L{alias} command.
+    """
 
     def test_help(self):
-        """test 'alias --help'"""
+        """
+        Test C{alias --help}.
+        """
         output = self.run_command("alias --help", exitcode=0)
         self.assertIn("alias", output)
         self.assertIn("-h", output)
@@ -15,7 +22,9 @@ class AliasTests(StashTestCase):
         self.assertIn("name=", output)
 
     def test_la_alias(self):
-        """tests the unmount alias"""
+        """
+        Tests the unmount alias.
+        """
         # assert existence
         output = self.run_command("alias", exitcode=0)
         self.assertIn("la=", output)
@@ -26,7 +35,9 @@ class AliasTests(StashTestCase):
         self.assertEqual(output, output_full)
 
     def test_alias(self):
-        """create and test alias"""
+        """
+        Create and test alias.
+        """
         # ensure alias not yet defined
         output = self.run_command("alias", exitcode=0)
         self.assertNotIn("testalias", output)

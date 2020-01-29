@@ -1,9 +1,15 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+"""
+Tests for L{stash.system.shparsers.ShCompleter}.
+"""
 
 from stash.tests.stashtest import StashTestCase
 
 
 class CompleterTests(StashTestCase):
+    """
+    Tests for L{stash.system.shparsers.ShCompleter}.
+    """
     def setUp(self):
         StashTestCase.setUp(self)
         self.complete = self.stash.completer.complete

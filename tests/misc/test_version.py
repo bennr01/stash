@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
-"""tests for the 'version' command."""
+"""
+Tests for the L{version} command.
+"""
+
 import platform
 
 from stash.tests.stashtest import StashTestCase
 
 
 class VersionTests(StashTestCase):
-    """Tests for the 'version' command."""
+    """
+    Tests for the L{version} command.
+    """
 
     def test_keys(self):
-        """ensure keys like 'core.py' are in the output of 'version'"""
+        """
+        Ensure keys like C{core.py} are in the output of L{version}.
+        """
         output = self.run_command("version", exitcode=0)
         self.assertIn("StaSh", output)
         self.assertIn("Python", output)
@@ -24,11 +31,15 @@ class VersionTests(StashTestCase):
         self.assertIn("Loaded libraries", output)
 
     def test_correct_py_version(self):
-        """test that the correct python version will be reported."""
+        """
+        Test that the correct python version will be reported.
+        """
         output = self.run_command("version", exitcode=0)
         self.assertIn(platform.python_version(), output)
 
     def test_correct_stash_version(self):
-        """test that the correct stash version will be reported."""
+        """
+        Test that the correct stash version will be reported.
+        """
         output = self.run_command("version", exitcode=0)
         self.assertIn(self.stash.__version__, output)

@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""tests for the ping command."""
+"""
+Tests for the L{ping} command.
+
+For unknown reasons, some of these tests fail outsideo of iOS
+"""
+
 import time
 import unittest
 
@@ -7,10 +12,14 @@ from stash.tests.stashtest import StashTestCase, requires_network
 
 
 class PingTests(StashTestCase):
-    """tests for the 'ping' command."""
+    """
+    Tests for the L{ping} command.
+    """
 
     def test_help(self):
-        """test 'ping --help'"""
+        """
+        Test C{ping --help}.
+        """
         output = self.run_command("ping --help", exitcode=0)
         self.assertIn("ping", output)
         self.assertIn("-h", output)
@@ -23,7 +32,9 @@ class PingTests(StashTestCase):
     @unittest.expectedFailure
     @requires_network
     def test_ping_normal(self):
-        """test 'ping <ip>'."""
+        """
+        Test C{ping <ip>}.
+        """
         target = "8.8.8.8"
         output = self.run_command("ping " + target, exitcode=0)
         self.assertIn("got ping in " + target, output)
@@ -32,7 +43,9 @@ class PingTests(StashTestCase):
     @unittest.expectedFailure
     @requires_network
     def test_count(self):
-        """test 'ping <target> --count <n>'."""
+        """
+        Test C{ping <target> --count <n>}.
+        """
         target = "8.8.8.8"
         for n in (1, 3, 5):
             output = self.run_command("ping " + target + " --count " + str(n), exitcode=0)
@@ -44,7 +57,9 @@ class PingTests(StashTestCase):
     @unittest.expectedFailure
     @requires_network
     def test_interval(self):
-        """test 'ping <target> --interval <n>'."""
+        """
+        Test C{ping <target> --interval <n>}.
+        """
         target = "8.8.8.8"
         c = 3
         for t in (1, 5, 10):
@@ -64,6 +79,10 @@ class PingTests(StashTestCase):
     @unittest.expectedFailure
     @unittest.skip("Test not implemented")
     def test_timeout():
-        """test 'ping <target> --timeout <t>'."""
+        """
+        Test C{ping <target> --timeout <t>}.
+        
+        B{Not implemented!}
+        """
         # no idea how to implement a test for this case
         raise NotImplementedError

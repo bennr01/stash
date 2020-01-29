@@ -1,5 +1,5 @@
 """
-Tests for pbcopy/pbpaste commands.
+Tests for the L{pbcopy}/L{pbpaste} commands.
 """
 import os
 import tempfile
@@ -11,11 +11,11 @@ from stash.tests.stashtest import StashTestCase
 
 class CopyPasteTests(StashTestCase):
     """
-    Test class for the 'pbcopy' and 'pbpaste' commands.
+    Test class for the L{pbcopy} and L{pbpaste} commands.
     """
     def test_pbcopy_help(self):
         """
-        test 'pbcopy --help'.
+        Test C{pbcopy --help}.
         """
         output_1 = self.run_command("pbcopy -h", exitcode=0)
         output_2 = self.run_command("pbcopy --help", exitcode=0)
@@ -28,7 +28,7 @@ class CopyPasteTests(StashTestCase):
     
     def test_pbpaste_help(self):
         """
-        test 'pbpaste --help'.
+        Test C{pbpaste --help}.
         """
         output_1 = self.run_command("pbpaste -h", exitcode=0)
         output_2 = self.run_command("pbpaste --help", exitcode=0)
@@ -60,6 +60,7 @@ class CopyPasteTests(StashTestCase):
     def test_paste_into_file(self):
         """
         Test copy of a file & paste into a file.
+        
         Comparsion is done using 'md5sum'
         """
         pin = os.path.join(self.get_data_path(), "testfile.txt")

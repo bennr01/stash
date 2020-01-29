@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""utility StaSh testcase for common methids"""
+"""
+StaSh test utility classes and functions.
+
+@var ON_TRAVIS: True if running on travis CI
+@type ON_TRAVIS: L{bool}
+"""
+
 import os
 import sys
 import unittest
@@ -23,8 +29,9 @@ ON_TRAVIS = "TRAVIS" in os.environ
 def network_is_available():
     """
     Check whether the network is available.
-    @return: whether the network is available.
-    @rtype: bool
+    
+    @return: whether the network is available or not.
+    @rtype: L{bool}
     """
     # to be sure, test multiple sites in case one of them is offline
     test_sites = [
@@ -48,6 +55,7 @@ def requires_network(f):
     """
     Decorator for specifying that a test needs a network connection.
     If no network connection is available, skip test.
+    
     @param f: test function
     @type f: callable
     @return: decorated function
@@ -60,6 +68,7 @@ def requires_network(f):
 def expected_failure_on_py3(f):
     """
     Decorator for specifying that a test will probably fail on py3.
+    
     @param f: test function
     @type f: callable
     @return: decorated function
@@ -72,7 +81,35 @@ def expected_failure_on_py3(f):
 
 
 class StashTestCase(unittest.TestCase):
-    """A test case implementing utility methods for testing StaSh"""
+    """
+    A test case implementing utility methods for testing StaSh.
+    
+    This class takes care of ensuring various things, like telling StaSh
+    to use tracebacks, setting up CWD, ensuring C{$STASH_ROOT/lib} is in
+    L{sys.path}, and other things.
+    
+    @cvar cwd: CWD to CD into on L{setUp}.
+    
+    Path will be expanded and converted into an absolute path. Result
+    will be logged.
+    
+    @type cwd: L{str}
+    @cvar setup_commands: list of commands to run L{setUp}.
+    @type setup_commands: L{list} of L{str}
+    @cvar environment: environment variables whose existence will be
+    ensured.
+    
+    It is a mapping of varname -> default value. If a variable already
+    exists, it will B{not} be overwritten.
+    @type environment: L{dict} of L{str} -> L{str}
+    @cvar maxDiff: max length diff to show. Used by pytest.
+    @type maxDiff: L{int}
+    
+    @ivar logger: the logger for this test
+    @type logger: L{logging.Logger}
+    @ivar stash: the StaSh instance for this test.
+    @type stash: L{stash.core.StaSh}
+    """
 
     cwd = "$STASH_ROOT"
     setup_commands = []
@@ -85,11 +122,23 @@ class StashTestCase(unittest.TestCase):
     maxDiff = 4096  # max diff size
     
     def get_data_path(self):
-        """return the data/ sibling path"""
+        """
+        Return the 'data/' sibling path.
+        """
         curpath = os.path.dirname(sys.modules[self.__module__].__file__)
         return os.path.abspath(os.path.join(curpath, "data"))
 
     def setUp(self):
+        """
+        Called before each test.
+        
+        This is actually a L{unittest.TestCase} method, so look there
+        for details.
+        
+        This class overrides this method to create the
+        L{stash.core.StaSh} instance, setup logging, prepare StaSh and
+        other things.
+        """
         self.logger = logging.getLogger(self.__class__.__name__)
         self.stash = stash.StaSh()
 
@@ -119,11 +168,27 @@ class StashTestCase(unittest.TestCase):
         self.stash('clear')
 
     def tearDown(self):
+        """
+        Called after each test.
+        
+        This is actually a L{unittest.TestCase} method, so look there
+        for details.
+        
+        This class overrides this method to ensure StaSh is in a clean
+        state after each test. If it is not, an L{AssertionError} is
+        raised.
+        """
         assert self.stash.runtime.child_thread is None, u'child thread is not cleared'
         assert len(self.stash.runtime.worker_registry) == 0, u'worker registry not empty'
         del self.stash
 
     def do_test(self, cmd, cmp_str, ensure_same_cwd=True, ensure_undefined=(), ensure_defined=(), exitcode=None):
+        """
+        This method is used by the L{stash.tests.system} tests.
+        
+        This method is the result of a refactor from the old individual
+        test.
+        """
 
         saved_cwd = os.getcwd()
         self.logger.info(u"executing {c} in {d}...".format(c=cmd, d=saved_cwd))
@@ -152,12 +217,13 @@ class StashTestCase(unittest.TestCase):
     def run_command(self, command, exitcode=None):
         """
         Run a command and return its output.
+        
         @param command: command to run
-        @type command: str
+        @type command: L{str}
         @param exitcode: expected exitcode, None to ignore
-        @type exitcode: int or None
+        @type exitcode: L{int} or L{None}
         @return: output of the command
-        @rtype: str
+        @rtype: L{str}
         """
         # for debug purposes, locate script
         try:

@@ -263,6 +263,7 @@ class StaSh(object):
     def _load_config(no_cfgfile=False):
         """
         Load the configuration file.
+        
         @param no_cfgfile: if True, do not load the configuration file.
         @type no_cfgfile: L{bool}
         @return: the configuration
@@ -286,7 +287,8 @@ class StaSh(object):
     @staticmethod
     def _config_logging(log_setting):
         """
-        Create and configure L{logging}..
+        Create and configure L{logging}.
+        
         @param log_setting: log options
         @type log_setting: L{None} or L{dict}
         @return: a configured logger
@@ -331,7 +333,8 @@ class StaSh(object):
 
     def _load_lib(self):
         """
-        Load library files as modules and save each of them as attributes
+        Load library files as modules and save each of them as attributes.
+        
         Library files are files matching "$STASH_ROOT/lib/lib*.py".
         """
         lib_path = os.path.join(_STASH_ROOT, 'lib')
@@ -353,6 +356,7 @@ class StaSh(object):
     def write_message(self, s, error=False, prefix="stash: "):
         """
         Write a message to the output.
+        
         @param s: message to write
         @type s: L{str}
         @param error: whether this is an error message or not
@@ -374,6 +378,7 @@ class StaSh(object):
     def launch(self, command=None):
         """
         Launch StaSh, presenting the UI.
+        
         @param command: currently ignored
         """
         self.ui.show()
@@ -382,6 +387,7 @@ class StaSh(object):
     def close(self):
         """
         Quit StaSh.
+        
         StaSh is based arround the UI, so we delegate this task to the UI,
         which in turn will call L{stash.core.StaSh.on_exit}.
         """
@@ -405,7 +411,8 @@ class StaSh(object):
 
     def get_workers(self):
         """
-        Return a list of all workers..
+        Return a list of all workers.
+        
         @return: a list of all workers
         @rtype: L{list} of L{stash.system.shthreads.ShBaseThread}
         """
