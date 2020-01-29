@@ -180,7 +180,7 @@ def _confirm_dangerous():
     """
     repo = _get_repo()
     status = porcelain.status(repo.path)
-    if any(status.staged.values() + status.unstaged):
+    if any(list(status.staged.values()) + list(status.unstaged)):
         force = input(
             'WARNING: there are uncommitted modified files and/or staged changes. These could be overwritten by this command. Continue anyway? [y/n] '
         )
