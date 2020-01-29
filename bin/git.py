@@ -139,7 +139,7 @@ def _find_repo(path):
     @rtype: L{str}
     """
     try:
-        subdirs = os.walk(path).next()[1]
+        subdirs = next(os.walk(path))[1]
     except StopIteration:  # happens if path is not listable
         return None
 
