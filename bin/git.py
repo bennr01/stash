@@ -83,32 +83,24 @@ except ImportError:
     else:
         raise
 
-if six.PY3:
-    try:
-        import gittle3 as gittle
-        from gittle3 import Gittle
-    except ImportError:
-        if AUTODOWNLOAD_DEPENDENCIES:
+try:
+    import gittle as gittle
+    from gittle import Gittle
+except ImportError:
+    if AUTODOWNLOAD_DEPENDENCIES:
+        if six.PY3:
             # download gittle3
             print("Installing gittle3...")
             _stash("pip install gittle3")
-            import gittle3 as gittle
-            from gittle3 import Gittle
         else:
-            raise
-else:
-    try:
-        import gittle
-        from gittle import Gittle
-    except ImportError:
-        if AUTODOWNLOAD_DEPENDENCIES:
-            # download gittle
+            # download ad gittle
             print("Installing gittle...")
             _stash("pip install gittle")
-            import gittle
-            from gittle import Gittle
-        else:
-            raise
+        import gittle
+        from gittle import Gittle
+    else:
+        raise
+
 
 dulwich.client.get_ssh_vendor = dulwich.client.ParamikoSSHVendor
 
