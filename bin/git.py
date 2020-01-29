@@ -92,6 +92,8 @@ if six.PY3:
             # download gittle3
             print("Installing gittle3...")
             _stash("pip install gittle3")
+            import gittle3 as gittle
+            from gittle3 import Gittle
         else:
             raise
 else:
@@ -101,7 +103,10 @@ else:
     except ImportError:
         if AUTODOWNLOAD_DEPENDENCIES:
             # download gittle
+            print("Installing gittle...")
             _stash("pip install gittle")
+            import gittle
+            from gittle import Gittle
         else:
             raise
 
