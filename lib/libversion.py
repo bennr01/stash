@@ -49,6 +49,8 @@ def _parse_version(vs):
     splitted = vstr.split(".")
     verparts = []
     for v in splitted:
+        if not v.strip():
+            continue
         verparts.append(int(v))
     # parse post release
     rtstr = e[vei:]
