@@ -14,6 +14,27 @@ RELEASE_TYPE_PRIORITIES = {
 }
 
 
+class NonCanonicalVersionException(Exception):
+    """
+    Exception raised when a version is not canonical.
+    """
+    pass
+
+
+def _is_canonical(version):
+    """
+    Check if a version string is in a canonical format.
+    
+    This function is copied from PEP440 Appendix B.
+    
+    @param version: version to check
+    @type version: L{str}
+    @return: Whether the specified version is a canonical version
+    @rtype: L{bool}
+    """
+    return re.match(r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$', version) is not None
+
+
 def _parse_version(vs):
     """
     Parse a version string, e.g. '2!3.0.1.rc2.dev3'
@@ -26,6 +47,9 @@ def _parse_version(vs):
     # version scheme (PEP440): [N!]N(.N)*[{a|b|rc}N][.postN][.devN]
     # convert to lowercase, since all versions must be case insenstive (PEP440)
     e = vs.lower()
+    # do not parse non-canonical versions (PEP440 requires this)
+    if not _is_canonical(e):
+        raise NonCanonicalVersionException(e)
     # extract information from
     if "!" in e:
         # read epoch
@@ -49,8 +73,6 @@ def _parse_version(vs):
     splitted = vstr.split(".")
     verparts = []
     for v in splitted:
-        if not v.strip():
-            continue
         verparts.append(int(v))
     # parse post release
     rtstr = e[vei:]
@@ -166,6 +188,8 @@ class Version(object):
             # s is already a Version
             return s
         parsed = _parse_version(s)
+        if parsed is None:
+            raise ValueError("Invalid Version!")
         return Version(**parsed)
 
     @property
@@ -336,6 +360,10 @@ class VersionSpecifier(object):
                 continue
             cmp_end = re.search(version_cmp, vs).end()
             c, v = vs[:cmp_end], vs[cmp_end:]
+            if not _is_canonical(v):
+                # non-canonical version
+                # According to PEP 440 we should discard this version
+                return None, None, []
             specs.append((c, v))
         version = VersionSpecifier(specs)
         return name, version, extras
@@ -354,9 +382,13 @@ class VersionSpecifier(object):
             try:
                 vi = Version.parse(version)
                 evi = Version.parse(ver)
+            except NonCanonicalVersionException:
+                # ignore non-canonical versions
+                matches = False
             except:
                 # warning: wildcard except!
                 # fallback to old, string-based comparsion
+                raise
                 if not op(version, ver):
                     matches = False
             else:
