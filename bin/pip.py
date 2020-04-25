@@ -1246,7 +1246,7 @@ class PyPIRepository(PackageRepository):
             if requires_python is not None:
                 reqs = "python" + requires_python
                 name, ver_spec, extras = VersionSpecifier.parse_requirement(reqs)
-                assert name == "python"  # if this if False some large bug happened...
+                assert name == "python"  # if this is False some large bug happened...
                 if ver_spec.match(platform.python_version()):
                     # compatible
                     return True

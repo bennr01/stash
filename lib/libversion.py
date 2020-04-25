@@ -3,6 +3,8 @@
 import re
 import operator
 
+import six
+
 # release type identifier -> release type priority (higher == better)
 RELEASE_TYPE_PRIORITIES = {
     None: 4,   # no release type
@@ -360,7 +362,7 @@ class VersionSpecifier(object):
                 continue
             cmp_end = re.search(version_cmp, vs).end()
             c, v = vs[:cmp_end], vs[cmp_end:]
-            if not _is_canonical(v):
+            if not (_is_canonical(v) or v.endswith("*")):
                 # non-canonical version
                 # According to PEP 440 we should discard this version
                 return None, None, []
@@ -379,19 +381,31 @@ class VersionSpecifier(object):
         # return all([op(Version.parse(version), Version.parse(ver)) for op, ver in self.specs])
         matches = True
         for op, ver in self.specs:
-            try:
-                vi = Version.parse(version)
-                evi = Version.parse(ver)
-            except NonCanonicalVersionException:
-                # ignore non-canonical versions
-                matches = False
-            except:
-                # warning: wildcard except!
-                # fallback to old, string-based comparsion
-                raise
-                if not op(version, ver):
-                    matches = False
+            if isinstance(ver, (six.text_type, six.binary_type)) and ver.endswith("*"):
+                # prefix based match
+                if op is operator.eq:
+                    if not version.startswith(ver.replace("*", "")):
+                        matches = False
+                elif op is operator.ne:
+                    if version.startswith(ver.replace("*", "")):
+                        matches = False
+                else:
+                    raise ValueError("Invalid operator for prefix comparsion!")
             else:
-                if not op(vi, evi):
+                # version match
+                try:
+                    vi = Version.parse(version)
+                    evi = Version.parse(ver)
+                except NonCanonicalVersionException:
+                    # ignore non-canonical versions
                     matches = False
+                except:
+                    # warning: wildcard except!
+                    # fallback to old, string-based comparsion
+                    raise
+                    if not op(version, ver):
+                        matches = False
+                else:
+                    if not op(vi, evi):
+                        matches = False
         return matches
